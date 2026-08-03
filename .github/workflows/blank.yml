@@ -34,7 +34,7 @@ jobs:
         run: npm run lint
 
   build:
-    name: Build API
+    name: Build APP
     runs-on: ubuntu-latest
     needs: lint
 
