@@ -1,0 +1,36 @@
+rules:
+  - id: no-prisma-in-controller
+    message: >
+      Controllers must not inject PrismaService directly.
+      Move all database logic into a Service.
+    severity: ERROR
+    languages: [typescript]
+    patterns:
+      - pattern: |
+          class $CTRL {
+            constructor(..., $P: PrismaService, ...) { ... }
+          }
+      - pattern-regex: "@Controller"
+
+  - id: no-prisma-import-in-controller
+    message: >
+      Controller files must not import PrismaService or PrismaClient.
+      Use a dedicated Service instead.
+    severity: ERROR
+    languages: [typescript]
+    patterns:
+      - pattern: |
+          import { ..., $P, ... } from '...prisma...'
+      - pattern-regex: "@Controller"
+
+  - id: controller-must-inject-service
+    message: >
+      This controller has no Service injected. Every controller must
+      delegate business logic to at least one service.
+    severity: WARNING
+    languages: [typescript]
+    pattern: |
+      class $CTRL {
+        constructor() {}
+      }
+    pattern-regex: "@Controller"

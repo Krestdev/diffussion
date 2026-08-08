@@ -5,9 +5,9 @@ name: CI - Diffussion
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -56,3 +56,18 @@ jobs:
 
       - name: Build project
         run: npm run build
+
+  semgrep:
+    name: Semgrep (SAST)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run Semgrep (auto + custom rules) - Codding rules and standars check
+        uses: returntocorp/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d # v1
+        with:
+          config: >
+            auto
+            .semgrep/nestjs-architecture.yml
