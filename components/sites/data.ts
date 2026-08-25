@@ -3,19 +3,20 @@ import type { Site } from "@/components/sites/types"
 export const users = [
   "Jason ADIOGO",
   "Socrate NZOGNING",
-  "Walter White",
+  "Joseph FONKOU",
   "Bruno Malong",
+  "Marie Christine Kemba",
 ] as const
 
 export const sites: Site[] = [
   {
     id: "st-392",
     code: "ST-392",
-    referenceNumber: "T-6899",
     name: "Cristal",
     city: "Douala",
     manager: "Jason ADIOGO",
     status: "active",
+    referenceNumber: "ST-392",
     folderCount: 94,
     employeeCount: 44,
     createdBy: "Jason Adiogo",
@@ -25,16 +26,16 @@ export const sites: Site[] = [
   {
     id: "st-067",
     code: "ST-067",
-    referenceNumber: "T-4213",
     name: "Emeraude",
     city: "Yaoundé",
     manager: "Socrate NZOGNING",
     status: "active",
-    folderCount: 31,
-    employeeCount: 18,
+    referenceNumber: "ST-067",
+    folderCount: 51,
+    employeeCount: 19,
     createdBy: "Jason Adiogo",
-    createdAt: "3 Mai 2026, 09:02",
-    updatedAt: "3 Mai 2026, 09:02",
+    createdAt: "18 Juin 2026, 09:10",
+    updatedAt: "19 Juin 2026, 11:05",
   },
 ]
 

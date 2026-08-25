@@ -1,4 +1,52 @@
-import type { ArchivedMail, ArchivedTask } from "@/components/archives/types"
+import type {
+  ArchivedFolder,
+  ArchivedMail,
+  ArchivedTask,
+} from "@/components/archives/types"
+
+export const archivedFolders: ArchivedFolder[] = [
+  {
+    id: "f-01",
+    code: "F-01",
+    title: "Communauté urbaine de Douala",
+    mailsCount: 153,
+    site: "Cristal",
+    type: "Type 1",
+    archivedAt: "24 Juillet 2026, 12:33",
+    archivedBy: "Jason Adiogo",
+    referenceNumber: "E-20481093822",
+    description:
+      "Correspondances et courriers relatifs à la Communauté urbaine de Douala.",
+    responsible: "Jordan Kenfack",
+    project: "67 Design & Build",
+    files: [],
+  },
+  {
+    id: "f-02",
+    code: "F-02",
+    title: "Immeuble Krest - 67 Design",
+    mailsCount: 36,
+    site: "Cristal",
+    type: "Type 2",
+    archivedAt: "24 Juillet 2026, 12:33",
+    archivedBy: "Jason Adiogo",
+    referenceNumber: "E-45898760057",
+    description:
+      "Le service de terrassement nécessite un casque de sécurité pour tous les employés sur le site.",
+    responsible: "Jordan Kenfack",
+    project: "Construction du Viaduc sur la Sanaga",
+    files: [
+      { name: "NomDuFichier1", size: "2.45 Mo" },
+      { name: "NomDuFichier2", size: "145 Ko" },
+      { name: "Livrable 1", size: "1.20 Mo" },
+      { name: "Livrable 2", size: "980 Ko" },
+    ],
+  },
+]
+
+export function getArchivedFolder(id: string) {
+  return archivedFolders.find((folder) => folder.id === id)
+}
 
 export const archivedMails: ArchivedMail[] = [
   {
