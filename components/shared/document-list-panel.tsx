@@ -1,6 +1,7 @@
 "use client"
 
-import { Download, FileX, Paperclip, Trash2 } from "lucide-react"
+import Link from "next/link"
+import { Download, Eye, FileX, Paperclip, Trash2 } from "lucide-react"
 
 import { toast } from "@/components/ui/toast"
 import {
@@ -62,14 +63,23 @@ export function DocumentListPanel({
               key={document.id}
               className="flex items-center gap-2 rounded-lg border border-[#f4f4f5] p-2"
             >
-              <div className="min-w-0 flex-1">
+              <Link
+                href={`/documents/${document.id}`}
+                className="min-w-0 flex-1 hover:underline"
+              >
                 <p className="truncate text-sm text-[#2f2f2f]">
                   {document.originalName}
                 </p>
                 <p className="text-xs text-[#a1a1aa]">
                   {formatSize(document.sizeBytes)}
                 </p>
-              </div>
+              </Link>
+              <Link
+                href={`/documents/${document.id}`}
+                aria-label={`Aperçu de ${document.originalName}`}
+              >
+                <Eye className="size-4 text-muted-foreground" />
+              </Link>
               <button
                 type="button"
                 onClick={() => handleDownload(document.id)}

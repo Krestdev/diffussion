@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Ellipsis } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,15 @@ export function CircuitRowActions({ circuit }: { circuit: Circuit }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            render={
+              <Link
+                href={`/administration/parametres/circuits-validation/${circuit.id}`}
+              />
+            }
+          >
+            Voir
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenDialog("steps")}>
             Gérer les étapes
           </DropdownMenuItem>

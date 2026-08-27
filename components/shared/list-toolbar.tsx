@@ -2,8 +2,15 @@ import { Search, Settings2 } from "lucide-react"
 
 export function ListToolbar({
   showFilters = true,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Rechercher",
 }: {
   showFilters?: boolean
+  /** Pass with onSearchChange to make the search box actually filter — otherwise it's decorative. */
+  searchValue?: string
+  onSearchChange?: (value: string) => void
+  searchPlaceholder?: string
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -12,7 +19,9 @@ export function ListToolbar({
           <Search className="size-5 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Rechercher"
+            value={searchValue}
+            onChange={(event) => onSearchChange?.(event.target.value)}
+            placeholder={searchPlaceholder}
             className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-[#a1a1aa]"
           />
         </div>

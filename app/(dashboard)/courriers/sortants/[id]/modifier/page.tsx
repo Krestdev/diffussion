@@ -21,7 +21,7 @@ export default function Page({
 
   return (
     <>
-      <OutgoingMailFormHeader mode="edit" />
+      <OutgoingMailFormHeader mode="edit" courrierId={id} />
       {isLoading || !mail ? (
         <p className="text-sm text-[#71717a]">Chargement…</p>
       ) : (

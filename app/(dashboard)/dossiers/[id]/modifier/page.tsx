@@ -21,7 +21,7 @@ export default function Page({
 
   return (
     <>
-      <FolderFormHeader mode="edit" />
+      <FolderFormHeader mode="edit" dossierId={id} />
       {isLoading || !folder ? (
         <p className="text-sm text-[#71717a]">Chargement…</p>
       ) : (

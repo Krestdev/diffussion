@@ -169,7 +169,7 @@ function FolderFormFields({
         title: mode === "edit" ? "Dossier modifié" : "Dossier créé",
         type: "success",
       })
-      router.push("/dossiers")
+      router.push(mode === "edit" ? `/dossiers/${dossier.id}` : "/dossiers")
     } catch (error) {
       toast.add({
         title: "Échec de l'enregistrement",

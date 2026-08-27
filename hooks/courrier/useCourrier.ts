@@ -65,31 +65,6 @@ export function useSubmitCourrierForVerification() {
   })
 }
 
-export function useVerifyCourrier() {
-  const invalidate = useInvalidateCourriers()
-  return useMutation({
-    mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>
-      courrierQuery.verify(id, approved),
-    onSuccess: invalidate,
-  })
-}
-
-export function useValidateCourrier() {
-  const invalidate = useInvalidateCourriers()
-  return useMutation({
-    mutationFn: ({
-      id,
-      approved,
-      motif,
-    }: {
-      id: string
-      approved: boolean
-      motif?: string
-    }) => courrierQuery.validate(id, approved, motif),
-    onSuccess: invalidate,
-  })
-}
-
 export function useSendCourrier() {
   const invalidate = useInvalidateCourriers()
   return useMutation({
@@ -126,6 +101,15 @@ export function useUnarchiveCourrier() {
   const invalidate = useInvalidateCourriers()
   return useMutation({
     mutationFn: (id: string) => courrierQuery.unarchive(id),
+    onSuccess: invalidate,
+  })
+}
+
+export function useSetCourrierOwner() {
+  const invalidate = useInvalidateCourriers()
+  return useMutation({
+    mutationFn: ({ id, ownerId }: { id: string; ownerId: string }) =>
+      courrierQuery.setOwner(id, ownerId),
     onSuccess: invalidate,
   })
 }

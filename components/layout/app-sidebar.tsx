@@ -26,9 +26,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Logo } from "@/components/brand/logo"
 import { navGroups } from "@/components/layout/app-sidebar-data"
+import { useMyNotifications } from "@/hooks/notification/useNotification"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  // Only the Notifications item's badge is live — the others in
+  // app-sidebar-data.ts are still static placeholders (Approbation,
+  // Affectations, Requêtes, Tâches counts).
+  const { data: notifications } = useMyNotifications({ status: "NOT_READ" })
+  const unreadCount = notifications?.length ?? 0
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -56,27 +62,31 @@ export function AppSidebar() {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      render={<Link href={item.href} />}
-                      isActive={
-                        item.href === "/"
-                          ? pathname === "/"
-                          : pathname.startsWith(item.href)
-                      }
-                      className="rounded-[6px] font-medium data-active:font-medium"
-                    >
-                      {item.icon ? <item.icon /> : null}
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                    {item.badge ? (
-                      <SidebarMenuBadge className="rounded-[4px] bg-[#ffaf06] text-[#700032]">
-                        {item.badge}
-                      </SidebarMenuBadge>
-                    ) : null}
-                  </SidebarMenuItem>
-                ))}
+                {group.items.map((item) => {
+                  const badge =
+                    item.href === "/notifications" ? unreadCount : item.badge
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        render={<Link href={item.href} />}
+                        isActive={
+                          item.href === "/"
+                            ? pathname === "/"
+                            : pathname.startsWith(item.href)
+                        }
+                        className="rounded-[6px] font-medium data-active:font-medium"
+                      >
+                        {item.icon ? <item.icon /> : null}
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                      {badge ? (
+                        <SidebarMenuBadge className="rounded-[4px] bg-[#ffaf06] text-[#700032]">
+                          {badge}
+                        </SidebarMenuBadge>
+                      ) : null}
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

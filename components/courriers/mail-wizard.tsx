@@ -31,6 +31,7 @@ export function MailWizard({
           correspondentId: mail.correspondentId ?? "",
           natureId: mail.natureId ?? "",
           reference: mail.reference ?? "",
+          ownerId: "",
         }
       : emptyMailDraft()
   )
@@ -48,6 +49,9 @@ export function MailWizard({
       correspondentId: draft.correspondentId || undefined,
       natureId: draft.natureId || undefined,
       reference: draft.reference || undefined,
+      // Create-only (see CourrierPayload) — omitted entirely on edit so it's
+      // never sent to the update endpoint, which doesn't accept it anyway.
+      ownerId: mode === "create" ? draft.ownerId || undefined : undefined,
     }
 
     try {
@@ -76,7 +80,7 @@ export function MailWizard({
         title: mode === "edit" ? "Courrier modifié" : "Courrier enregistré",
         type: "success",
       })
-      router.push("/courriers/entrants")
+      router.push(mode === "edit" ? `/courriers/entrants/${courrier.id}` : "/courriers/entrants")
     } catch (error) {
       toast.add({
         title: "Échec de l'enregistrement",
@@ -93,7 +97,11 @@ export function MailWizard({
     <>
       <PageHeader
         variant="secondary"
-        backHref="/courriers/entrants"
+        backHref={
+          mode === "edit" && mail
+            ? `/courriers/entrants/${mail.id}`
+            : "/courriers/entrants"
+        }
         title={
           mode === "edit" ? "Modifier un courrier" : "Enregistrer un courrier"
         }
@@ -107,6 +115,7 @@ export function MailWizard({
         <MailStepper currentStep={step} />
         {step === 1 ? (
           <MailInfoStep
+            mode={mode}
             draft={draft}
             onChange={setDraft}
             onNext={() => setStep(2)}

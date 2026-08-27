@@ -1,6 +1,6 @@
 "use client"
 
-import { useCourriers } from "@/hooks/courrier/useCourrier"
+import { useCircuitInstances } from "@/hooks/circuitInstance/useCircuitInstance"
 
 /**
  * Status filter for the Approbation queue. Shows the real pending count;
@@ -9,17 +9,8 @@ import { useCourriers } from "@/hooks/courrier/useCourrier"
  * this page's non-functional search/filter controls).
  */
 export function ApprobationTabs() {
-  const { data: verification } = useCourriers({
-    direction: "SORTANT",
-    status: "EN_VERIFICATION",
-    take: 1,
-  })
-  const { data: validation } = useCourriers({
-    direction: "SORTANT",
-    status: "EN_VALIDATION",
-    take: 1,
-  })
-  const pending = (verification?.total ?? 0) + (validation?.total ?? 0)
+  const { data: instances } = useCircuitInstances({ status: "IN_PROGRESS" })
+  const pending = instances?.length ?? 0
 
   return (
     <div className="flex w-fit items-center overflow-hidden rounded border border-[#dfdfdf] bg-white">

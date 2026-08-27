@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { AccessRightsPanel } from "@/components/shared/access-rights-panel"
 import { AddTaskDialog } from "@/components/shared/add-task-dialog"
-import { CircuitStubPanel } from "@/components/shared/circuit-stub-panel"
+import { CircuitInstancePanel } from "@/components/shared/circuit-instance-panel"
 import { CourrierStatusBadge } from "@/components/shared/courrier-status-badge"
 import { DocumentListPanel } from "@/components/shared/document-list-panel"
 import { InstructionTasksPanel } from "@/components/shared/instruction-tasks-panel"
@@ -65,9 +65,8 @@ function InfoRow({
 const EDITABLE_STATUSES: CourrierStatus[] = ["BROUILLON", "A_CORRIGER"]
 const CANCELLABLE_STATUSES: CourrierStatus[] = [
   "BROUILLON",
-  "EN_VERIFICATION",
+  "EN_CIRCUIT",
   "A_CORRIGER",
-  "EN_VALIDATION",
 ]
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
@@ -199,7 +198,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             )
           }
         />
-        <CircuitStubPanel />
+        <CircuitInstancePanel courrierId={mail.id} />
       </div>
 
       <OutgoingMailCancelDialog

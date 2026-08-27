@@ -1,11 +1,14 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { FileText, Inbox, Send } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "@/components/shared/data-table"
+import { FilterTabs } from "@/components/shared/filter-tabs"
+import { ListPagination } from "@/components/shared/list-pagination"
+import { ListToolbar } from "@/components/shared/list-toolbar"
 import { CourrierStatusBadge } from "@/components/shared/courrier-status-badge"
 import { DocumentRowActions } from "@/components/shared/document-row-actions"
 import { MailRowActions } from "@/components/courriers/mail-row-actions"
@@ -19,6 +22,10 @@ type ContentRow =
   | { kind: "courrier"; courrier: Courrier; reference: string; title: string; date: string; href: string }
   | { kind: "document"; document: DocumentItem; reference: string; title: string; date: string; href: string }
 
+type Tab = "all" | "entrant" | "sortant" | "document"
+
+const PAGE_SIZE = 10
+
 export function DossierContentsTable({ dossierId }: { dossierId: string }) {
   const { data: courriers, isLoading: loadingCourriers } = useCourriers({
     dossierId,
@@ -27,6 +34,10 @@ export function DossierContentsTable({ dossierId }: { dossierId: string }) {
   const { data: documents, isLoading: loadingDocuments } = useDocuments({
     dossierId,
   })
+
+  const [tab, setTab] = useState<Tab>("all")
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
 
   const rows = useMemo<ContentRow[]>(() => {
     const courrierRows: ContentRow[] = (courriers?.data ?? []).map((courrier) => ({
@@ -52,6 +63,51 @@ export function DossierContentsTable({ dossierId }: { dossierId: string }) {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     )
   }, [courriers, documents])
+
+  const counts = useMemo(
+    () => ({
+      all: rows.length,
+      entrant: rows.filter((r) => r.kind === "courrier" && r.courrier.direction === "ENTRANT").length,
+      sortant: rows.filter((r) => r.kind === "courrier" && r.courrier.direction === "SORTANT").length,
+      document: rows.filter((r) => r.kind === "document").length,
+    }),
+    [rows]
+  )
+
+  const byTab = useMemo(() => {
+    if (tab === "all") return rows
+    if (tab === "document") return rows.filter((r) => r.kind === "document")
+    return rows.filter(
+      (r) => r.kind === "courrier" && r.courrier.direction.toLowerCase() === tab
+    )
+  }, [rows, tab])
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase()
+    if (!query) return byTab
+    return byTab.filter(
+      (r) =>
+        r.title.toLowerCase().includes(query) ||
+        r.reference.toLowerCase().includes(query)
+    )
+  }, [byTab, search])
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const pageRows = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  )
+
+  function handleTabChange(next: Tab) {
+    setTab(next)
+    setPage(1)
+  }
+
+  function handleSearchChange(next: string) {
+    setSearch(next)
+    setPage(1)
+  }
 
   const columns = useMemo<ColumnDef<ContentRow>[]>(
     () => [
@@ -124,11 +180,41 @@ export function DossierContentsTable({ dossierId }: { dossierId: string }) {
   )
 
   return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      isLoading={loadingCourriers || loadingDocuments}
-      emptyMessage="Ce dossier ne contient encore aucun courrier ni document"
-    />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <FilterTabs
+          value={tab}
+          onChange={handleTabChange}
+          tabs={[
+            { value: "all", label: "Tous", count: counts.all },
+            { value: "entrant", label: "Entrants", count: counts.entrant },
+            { value: "sortant", label: "Sortants", count: counts.sortant },
+            { value: "document", label: "Documents", count: counts.document },
+          ]}
+        />
+      </div>
+      <ListToolbar
+        showFilters={false}
+        searchValue={search}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Rechercher par titre ou référence"
+      />
+      <DataTable
+        columns={columns}
+        data={pageRows}
+        isLoading={loadingCourriers || loadingDocuments}
+        emptyMessage={
+          rows.length === 0
+            ? "Ce dossier ne contient encore aucun courrier ni document"
+            : "Aucun résultat pour ces filtres"
+        }
+      />
+      <ListPagination
+        total={filtered.length}
+        page={safePage}
+        pageCount={pageCount}
+        onPageChange={setPage}
+      />
+    </div>
   )
 }

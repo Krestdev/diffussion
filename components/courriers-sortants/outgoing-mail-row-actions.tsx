@@ -21,9 +21,8 @@ import type { Courrier, CourrierStatus } from "@/hooks/courrier/type"
 const EDITABLE_STATUSES: CourrierStatus[] = ["BROUILLON", "A_CORRIGER"]
 const CANCELLABLE_STATUSES: CourrierStatus[] = [
   "BROUILLON",
-  "EN_VERIFICATION",
+  "EN_CIRCUIT",
   "A_CORRIGER",
-  "EN_VALIDATION",
 ]
 
 // "Voir" now opens the full detail page — see

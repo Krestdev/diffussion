@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
+import { CircuitOwnerField } from "@/components/shared/circuit-owner-field"
 import { DocumentUploadField } from "@/components/shared/document-upload-field"
 import { useCorrespondents } from "@/hooks/correspondent/useCorrespondent"
 import { useCourrierNatures } from "@/hooks/courrierNature/useCourrierNature"
@@ -38,6 +39,7 @@ export function OutgoingMailForm({
   )
   const [natureId, setNatureId] = useState(mail?.natureId ?? "")
   const [reference, setReference] = useState(mail?.reference ?? "")
+  const [ownerId, setOwnerId] = useState("")
   const [files, setFiles] = useState<File[]>([])
 
   const { data: dossiers } = useDossiers()
@@ -57,6 +59,9 @@ export function OutgoingMailForm({
       correspondentId: correspondentId || undefined,
       natureId: natureId || undefined,
       reference: reference || undefined,
+      // Create-only (see CourrierPayload) — omitted entirely on edit so it's
+      // never sent to the update endpoint, which doesn't accept it anyway.
+      ownerId: mode === "create" ? ownerId || undefined : undefined,
     }
 
     try {
@@ -85,7 +90,7 @@ export function OutgoingMailForm({
         title: mode === "edit" ? "Courrier modifié" : "Courrier créé",
         type: "success",
       })
-      router.push("/courriers/sortants")
+      router.push(mode === "edit" ? `/courriers/sortants/${courrier.id}` : "/courriers/sortants")
     } catch (error) {
       toast.add({
         title: "Échec de l'enregistrement",
@@ -186,6 +191,16 @@ export function OutgoingMailForm({
           className="h-9 rounded border border-[#e4e4e7] px-4 text-sm text-[#2f2f2f] outline-none placeholder:text-[#b0b0b0]"
         />
       </div>
+
+      {/* Owner is create-only (see CourrierPayload) — reassigning an
+          existing courrier's owner goes through CircuitOwnerRow instead. */}
+      {mode === "create" && (
+        <CircuitOwnerField
+          dossierId={dossierId}
+          value={ownerId}
+          onChange={setOwnerId}
+        />
+      )}
 
       <div className="sm:col-span-2">
         <DocumentUploadField

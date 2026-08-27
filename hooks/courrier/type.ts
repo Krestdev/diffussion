@@ -12,9 +12,8 @@ export type CourrierStatus =
   | "EN_TRAITEMENT"
   | "EN_ATTENTE"
   | "BROUILLON"
-  | "EN_VERIFICATION"
+  | "EN_CIRCUIT"
   | "A_CORRIGER"
-  | "EN_VALIDATION"
   | "VALIDE"
   | "PRET_A_ENVOYER"
   | "ENVOYE"
@@ -51,6 +50,12 @@ export type Courrier = {
   createdById: string | null
   createdAt: string
   updatedAt: string
+  // Circuit owner (10.6) — can decide any step of this courrier's circuit
+  // regardless of role/site gating. May be unset; completed later via
+  // useSetCourrierOwner by the creator, the site responsible, or a
+  // platform admin.
+  ownerId: string | null
+  owner: { id: string; name: string; email: string } | null
   dossier: CourrierDossierRef
   correspondent: Correspondent | null
   nature: CourrierNature | null
@@ -68,6 +73,9 @@ export type CourrierPayload = {
   copies?: number
   receivedAt?: string
   scanUrl?: string
+  // Circuit owner (10.6), settable at creation only — see
+  // useSetCourrierOwner for reassigning it afterwards.
+  ownerId?: string
 }
 
 export type FindCourriersParams = {

@@ -4,10 +4,13 @@ export function ListPagination({
   total = 20,
   page = 1,
   pageCount = 2,
+  onPageChange,
 }: {
   total?: number
   page?: number
   pageCount?: number
+  /** Pass to make the buttons actually navigate — otherwise they're decorative. */
+  onPageChange?: (page: number) => void
 }) {
   return (
     <div className="flex items-center justify-between text-xs">
@@ -20,6 +23,7 @@ export function ListPagination({
         </p>
         <button
           disabled={page <= 1}
+          onClick={() => onPageChange?.(1)}
           className="flex size-8 items-center justify-center rounded-lg border border-[#dfdfdf] bg-white disabled:opacity-50"
           aria-label="Page précédente (début)"
         >
@@ -27,6 +31,7 @@ export function ListPagination({
         </button>
         <button
           disabled={page <= 1}
+          onClick={() => onPageChange?.(page - 1)}
           className="flex size-8 items-center justify-center rounded-lg border border-[#dfdfdf] bg-white disabled:opacity-50"
           aria-label="Page précédente"
         >
@@ -34,6 +39,7 @@ export function ListPagination({
         </button>
         <button
           disabled={page >= pageCount}
+          onClick={() => onPageChange?.(page + 1)}
           className="flex size-8 items-center justify-center rounded-lg border border-[#dfdfdf] bg-white disabled:opacity-50"
           aria-label="Page suivante"
         >
@@ -41,6 +47,7 @@ export function ListPagination({
         </button>
         <button
           disabled={page >= pageCount}
+          onClick={() => onPageChange?.(pageCount)}
           className="flex size-8 items-center justify-center rounded-lg border border-[#dfdfdf] bg-white disabled:opacity-50"
           aria-label="Page suivante (fin)"
         >

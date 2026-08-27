@@ -35,7 +35,9 @@ export const navGroups: NavGroup[] = [
       { title: "Tableau de bord", href: "/", icon: House },
       { title: "Projets", href: "/projets", icon: BriefcaseBusiness },
       { title: "Dossiers", href: "/dossiers", icon: Archive },
-      { title: "Notifications", href: "/notifications", icon: Bell, badge: 9 },
+      // badge is computed live from unread notifications in AppSidebar, not
+      // set here — see the `href === "/notifications"` special-case there.
+      { title: "Notifications", href: "/notifications", icon: Bell },
       { title: "Mon Profil", href: "/profil", icon: CircleUserRound },
     ],
   },

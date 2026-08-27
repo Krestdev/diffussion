@@ -22,4 +22,7 @@ export const queryKeys = {
   category: (...args: unknown[]) => ["category", ...args] as const,
   circuit: (...args: unknown[]) => ["circuit", ...args] as const,
   circuitStep: (...args: unknown[]) => ["circuitStep", ...args] as const,
+  circuitInstance: (...args: unknown[]) =>
+    ["circuitInstance", ...args] as const,
+  notification: (...args: unknown[]) => ["notification", ...args] as const,
 } as const

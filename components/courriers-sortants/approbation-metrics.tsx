@@ -1,15 +1,18 @@
 "use client"
 
 import { SummaryMetrics } from "@/components/shared/summary-metrics"
+import { useCircuitInstances } from "@/hooks/circuitInstance/useCircuitInstance"
 import { useCourriers } from "@/hooks/courrier/useCourrier"
 
 export function ApprobationMetrics() {
-  const { data: verification } = useCourriers({ direction: "SORTANT", status: "EN_VERIFICATION", take: 1 })
-  const { data: validation } = useCourriers({ direction: "SORTANT", status: "EN_VALIDATION", take: 1 })
-  const { data: accepted } = useCourriers({ direction: "SORTANT", status: "VALIDE", take: 1 })
-  const { data: rejected } = useCourriers({ direction: "SORTANT", status: "A_CORRIGER", take: 1 })
+  const { data: instances } = useCircuitInstances({ status: "IN_PROGRESS" })
+  // Accepted/rejected are courrier-status counts (both directions) —
+  // documents have no equivalent status field, so a completed document
+  // circuit won't appear in these two, only in "En attente" while active.
+  const { data: accepted } = useCourriers({ status: "VALIDE", take: 1 })
+  const { data: rejected } = useCourriers({ status: "A_CORRIGER", take: 1 })
 
-  const pending = (verification?.total ?? 0) + (validation?.total ?? 0)
+  const pending = instances?.length ?? 0
 
   return (
     <SummaryMetrics

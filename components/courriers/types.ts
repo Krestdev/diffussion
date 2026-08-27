@@ -6,6 +6,8 @@ export type MailDraft = {
   correspondentId: string
   natureId: string
   reference: string
+  // Circuit owner (10.6), settable at creation only — see CourrierPayload.
+  ownerId: string
 }
 
 export function emptyMailDraft(): MailDraft {
@@ -15,5 +17,6 @@ export function emptyMailDraft(): MailDraft {
     correspondentId: "",
     natureId: "",
     reference: "",
+    ownerId: "",
   }
 }

@@ -8,17 +8,22 @@ class CourrierQuery extends BaseQuery<Courrier, CourrierPayload> {
   }
 
   transmit = (id: string) => this.action(id, "transmit")
+  // Starts the courrier's validation Circuit — decisions on the resulting
+  // CircuitInstance happen via hooks/circuitInstance, not here.
   submitForVerification = (id: string) => this.action(id, "submit-for-verification")
-  verify = (id: string, approved: boolean) =>
-    this.action(id, "verify", { approved })
-  validate = (id: string, approved: boolean, motif?: string) =>
-    this.action(id, "validate", { approved, motif })
   send = (id: string) => this.action(id, "send")
   cancel = (id: string) => this.action(id, "cancel")
   close = (id: string) => this.action(id, "close")
   archive = (id: string) => this.action(id, "archive")
   unarchive = (id: string) => this.action(id, "unarchive")
   discharge = (id: string) => this.action(id, "discharge")
+
+  // Circuit owner (10.6) — dedicated endpoint/authorization, not part of
+  // the generic patch() (see UpdateMailDto).
+  setOwner = async (id: string, ownerId: string): Promise<Courrier> => {
+    const response = await this.api.patch(`${this.url}/${id}/owner`, { ownerId })
+    return response.data
+  }
 
   // Independent from the dossier's own access list — see AccessEntry.
   getAccess = async (id: string): Promise<AccessEntry[]> => {

@@ -9,16 +9,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { CircuitOwnerField } from "@/components/shared/circuit-owner-field"
 import { useCorrespondents } from "@/hooks/correspondent/useCorrespondent"
 import { useCourrierNatures } from "@/hooks/courrierNature/useCourrierNature"
 import { useDossiers } from "@/hooks/dossier/useDossier"
 import type { MailDraft } from "@/components/courriers/types"
 
 export function MailInfoStep({
+  mode,
   draft,
   onChange,
   onNext,
 }: {
+  mode: "create" | "edit"
   draft: MailDraft
   onChange: (draft: MailDraft) => void
   onNext: () => void
@@ -127,6 +130,16 @@ export function MailInfoStep({
           className="h-9 rounded border border-[#e4e4e7] px-4 text-sm text-[#2f2f2f] outline-none placeholder:text-[#b0b0b0]"
         />
       </div>
+
+      {/* Owner is create-only (see CourrierPayload) — reassigning an
+          existing courrier's owner goes through CircuitOwnerRow instead. */}
+      {mode === "create" && (
+        <CircuitOwnerField
+          dossierId={draft.dossierId}
+          value={draft.ownerId}
+          onChange={(ownerId) => set("ownerId", ownerId)}
+        />
+      )}
 
       <div className="sm:col-span-2">
         <Button

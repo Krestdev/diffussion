@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
+import Link from "next/link"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { DataTable } from "@/components/shared/data-table"
@@ -13,7 +14,18 @@ export function CircuitsTable() {
 
   const columns = useMemo<ColumnDef<Circuit>[]>(
     () => [
-      { accessorKey: "name", header: "Nom" },
+      {
+        accessorKey: "name",
+        header: "Nom",
+        cell: ({ row }) => (
+          <Link
+            href={`/administration/parametres/circuits-validation/${row.original.id}`}
+            className="hover:underline"
+          >
+            {row.original.name}
+          </Link>
+        ),
+      },
       {
         id: "dossierType",
         header: "Type de dossier",

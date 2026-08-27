@@ -19,10 +19,13 @@ export function CircuitDeleteDialog({
   circuit,
   open,
   onOpenChange,
+  onDeleted,
 }: {
   circuit: Circuit
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Called after a successful delete — e.g. to navigate away from the circuit's own detail page. */
+  onDeleted?: () => void
 }) {
   const deleteCircuit = useDeleteCircuit()
 
@@ -31,6 +34,7 @@ export function CircuitDeleteDialog({
       onSuccess: () => {
         toast.add({ title: "Circuit supprimé", type: "success" })
         onOpenChange(false)
+        onDeleted?.()
       },
       onError: (error) =>
         toast.add({

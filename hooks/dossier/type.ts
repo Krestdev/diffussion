@@ -68,6 +68,7 @@ export type FindDossiersParams = {
   priority?: DossierPriority
   siteId?: string
   responsibleId?: string
+  typeId?: string
   skip?: number
   take?: number
 }

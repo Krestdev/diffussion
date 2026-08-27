@@ -4,7 +4,7 @@ import { SummaryMetrics } from "@/components/shared/summary-metrics"
 import { useCourriers } from "@/hooks/courrier/useCourrier"
 
 export function OutgoingMailsMetrics() {
-  const { data: pending } = useCourriers({ direction: "SORTANT", status: "EN_VERIFICATION", take: 1 })
+  const { data: pending } = useCourriers({ direction: "SORTANT", status: "EN_CIRCUIT", take: 1 })
   const { data: approved } = useCourriers({ direction: "SORTANT", status: "VALIDE", take: 1 })
   const { data: all } = useCourriers({ direction: "SORTANT", take: 1 })
 

@@ -5,7 +5,7 @@ import type { CourrierStatus } from "@/hooks/courrier/type"
 export type OutgoingMailStatusGroup = "pending" | "approved" | "rejected"
 
 export const statusGroups: Record<OutgoingMailStatusGroup, CourrierStatus[]> = {
-  pending: ["BROUILLON", "EN_VERIFICATION", "EN_VALIDATION"],
+  pending: ["BROUILLON", "EN_CIRCUIT"],
   approved: ["VALIDE", "PRET_A_ENVOYER", "ENVOYE"],
   rejected: ["A_CORRIGER", "ANNULE"],
 }

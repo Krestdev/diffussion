@@ -1,3 +1,5 @@
+"use client"
+
 import { ApprobationMetrics } from "@/components/courriers-sortants/approbation-metrics"
 import { ApprobationPageHeader } from "@/components/courriers-sortants/approbation-page-header"
 import { ApprobationTable } from "@/components/courriers-sortants/approbation-table"

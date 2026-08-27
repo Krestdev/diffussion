@@ -25,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AccessRightsPanel } from "@/components/shared/access-rights-panel"
-import { CircuitStubPanel } from "@/components/shared/circuit-stub-panel"
+import { DossierCircuitsSummaryPanel } from "@/components/shared/dossier-circuits-summary-panel"
 import { DossierContentsTable } from "@/components/dossiers/dossier-contents-table"
 import { FolderStatusBadge } from "@/components/dossiers/folder-status-badge"
 import { GrantDossierAccessDialog } from "@/components/shared/grant-dossier-access-dialog"
@@ -179,7 +179,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             )
           }
         />
-        <CircuitStubPanel />
+        <DossierCircuitsSummaryPanel dossierId={dossier.id} />
       </div>
 
       <GrantDossierAccessDialog

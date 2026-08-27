@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { AccessRightsPanel } from "@/components/shared/access-rights-panel"
 import { AddTaskDialog } from "@/components/shared/add-task-dialog"
-import { CircuitStubPanel } from "@/components/shared/circuit-stub-panel"
+import { CircuitInstancePanel } from "@/components/shared/circuit-instance-panel"
 import { CourrierStatusBadge } from "@/components/shared/courrier-status-badge"
 import { DocumentListPanel } from "@/components/shared/document-list-panel"
 import { InstructionTasksPanel } from "@/components/shared/instruction-tasks-panel"
@@ -40,6 +40,7 @@ import {
   useCourrier,
   useCourrierAccess,
   useSetCourrierAccess,
+  useSubmitCourrierForVerification,
 } from "@/hooks/courrier/useCourrier"
 import type { CourrierStatus } from "@/hooks/courrier/type"
 
@@ -74,6 +75,15 @@ const ENTRANT_OPEN_STATUSES: CourrierStatus[] = [
   "EN_TRAITEMENT",
 ]
 
+// Mirrors MailService's CIRCUIT_ELIGIBLE_STATUSES for the ENTRANT
+// direction — submitForVerification()/"Soumettre pour circuit" only makes
+// sense once the courrier has actually been handed off for treatment.
+const CIRCUIT_ELIGIBLE_STATUSES: CourrierStatus[] = [
+  "TRANSMIS",
+  "EN_TRAITEMENT",
+  "A_CORRIGER",
+]
+
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { data: mail, isLoading, isError } = useCourrier(id)
@@ -83,6 +93,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const closeCourrier = useCloseCourrier()
   const cancelCourrier = useCancelCourrier()
+  const submitForCircuit = useSubmitCourrierForVerification()
   const { data: access, isLoading: accessLoading } = useCourrierAccess(id)
   const setAccess = useSetCourrierAccess()
 
@@ -96,6 +107,19 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const isOpen = ENTRANT_OPEN_STATUSES.includes(mail.status)
   const isCompleted = mail.status === "CLOTURE"
+  const canSubmitForCircuit = CIRCUIT_ELIGIBLE_STATUSES.includes(mail.status)
+
+  function handleSubmitForCircuit() {
+    submitForCircuit.mutate(mail!.id, {
+      onSuccess: () => toast.add({ title: "Circuit démarré", type: "success" }),
+      onError: (error) =>
+        toast.add({
+          title: "Impossible de démarrer le circuit",
+          description: getApiErrorMessage(error, "Veuillez réessayer."),
+          type: "error",
+        }),
+    })
+  }
 
   function handleComplete() {
     closeCourrier.mutate(mail!.id, {
@@ -153,6 +177,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setOpenDialog("add-task")}>
                   Ajouter une tâche
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!canSubmitForCircuit || submitForCircuit.isPending}
+                  onClick={handleSubmitForCircuit}
+                >
+                  Soumettre pour circuit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   disabled={!isOpen}
@@ -234,7 +264,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             )
           }
         />
-        <CircuitStubPanel />
+        <CircuitInstancePanel courrierId={mail.id} />
       </div>
 
       <MailConfirmDialog

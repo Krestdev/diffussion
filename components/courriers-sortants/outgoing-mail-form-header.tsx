@@ -1,10 +1,20 @@
 import { PageHeader } from "@/components/shared/page-header"
 
-export function OutgoingMailFormHeader({ mode }: { mode: "create" | "edit" }) {
+export function OutgoingMailFormHeader({
+  mode,
+  courrierId,
+}: {
+  mode: "create" | "edit"
+  courrierId?: string
+}) {
   return (
     <PageHeader
       variant="secondary"
-      backHref="/courriers/sortants"
+      backHref={
+        mode === "edit" && courrierId
+          ? `/courriers/sortants/${courrierId}`
+          : "/courriers/sortants"
+      }
       title={
         mode === "edit"
           ? "Modifier un courrier sortant"

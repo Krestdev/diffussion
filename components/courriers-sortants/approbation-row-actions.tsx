@@ -14,42 +14,50 @@ import {
 import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
 import { ApprobationConfirmDialog } from "@/components/courriers-sortants/approbation-confirm-dialog"
-import { useValidateCourrier, useVerifyCourrier } from "@/hooks/courrier/useCourrier"
-import type { Courrier } from "@/hooks/courrier/type"
+import { useDecideCircuitInstance } from "@/hooks/circuitInstance/useCircuitInstance"
+import type { CircuitInstance } from "@/hooks/circuitInstance/type"
 
 type OpenDialog = "approve" | "reject" | null
 
-export function ApprobationRowActions({ mail }: { mail: Courrier }) {
+// Target can be a courrier (either direction) or a document — resolve to
+// each one's own detail route rather than assuming sortant.
+function targetHref(instance: CircuitInstance) {
+  if (instance.courrier) {
+    return instance.courrier.direction === "SORTANT"
+      ? `/courriers/sortants/${instance.courrier.id}`
+      : `/courriers/entrants/${instance.courrier.id}`
+  }
+  if (instance.document) return `/documents/${instance.document.id}`
+  return null
+}
+
+export function ApprobationRowActions({ instance }: { instance: CircuitInstance }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
-  const verifyCourrier = useVerifyCourrier()
-  const validateCourrier = useValidateCourrier()
+  const decide = useDecideCircuitInstance()
+  const href = targetHref(instance)
 
-  // EN_VERIFICATION is the verifier's step, EN_VALIDATION is the
-  // validator's — the Approbation queue shows a single "Approuver" action
-  // for whichever step the courrier is currently waiting on.
-  const isPending = verifyCourrier.isPending || validateCourrier.isPending
-
-  function decide(approved: boolean) {
-    const onSettled = {
-      onSuccess: () => {
-        toast.add({
-          title: approved ? "Courrier approuvé" : "Courrier rejeté",
-          type: "success",
-        })
-        setOpenDialog(null)
+  function handleDecide(approved: boolean) {
+    decide.mutate(
+      {
+        id: instance.id,
+        body: { decision: approved ? "VALIDE" : "CORRECTIONS_DEMANDEES" },
       },
-      onError: (error: unknown) =>
-        toast.add({
-          title: "Échec de l'opération",
-          description: getApiErrorMessage(error, "Veuillez réessayer."),
-          type: "error",
-        }),
-    }
-    if (mail.status === "EN_VERIFICATION") {
-      verifyCourrier.mutate({ id: mail.id, approved }, onSettled)
-    } else {
-      validateCourrier.mutate({ id: mail.id, approved }, onSettled)
-    }
+      {
+        onSuccess: () => {
+          toast.add({
+            title: approved ? "Étape approuvée" : "Étape rejetée",
+            type: "success",
+          })
+          setOpenDialog(null)
+        },
+        onError: (error) =>
+          toast.add({
+            title: "Échec de l'opération",
+            description: getApiErrorMessage(error, "Veuillez réessayer."),
+            type: "error",
+          }),
+      }
+    )
   }
 
   return (
@@ -64,11 +72,11 @@ export function ApprobationRowActions({ mail }: { mail: Courrier }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            render={<Link href={`/courriers/sortants/${mail.id}`} />}
-          >
-            Voir
-          </DropdownMenuItem>
+          {href && (
+            <DropdownMenuItem render={<Link href={href} />}>
+              Voir
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setOpenDialog("approve")}>
             Approuver
           </DropdownMenuItem>
@@ -82,28 +90,28 @@ export function ApprobationRowActions({ mail }: { mail: Courrier }) {
       </DropdownMenu>
 
       <ApprobationConfirmDialog
-        title={mail.subject}
-        subtitle="Courrier sortant"
-        description="Êtes-vous sûr de vouloir approuver ce courrier ? Cette action est irréversible."
+        title={instance.courrier?.subject ?? instance.document?.originalName ?? instance.circuit.name}
+        subtitle={`Étape : ${instance.currentStep.actionType ?? instance.currentStep.order}`}
+        description="Êtes-vous sûr de vouloir approuver cette étape ? Si c'est la dernière du circuit, le courrier sera validé."
         confirmLabel="Oui, approuver"
         confirmClassName="bg-[#16a34a] text-white hover:bg-[#16a34a]/90"
         cancelLabel="Annuler"
         variant="success"
-        onConfirm={() => decide(true)}
-        isPending={isPending}
+        onConfirm={() => handleDecide(true)}
+        isPending={decide.isPending}
         open={openDialog === "approve"}
         onOpenChange={(open) => setOpenDialog(open ? "approve" : null)}
       />
       <ApprobationConfirmDialog
-        title={mail.subject}
-        subtitle="Courrier sortant"
-        description="Êtes-vous sûr de vouloir rejeter ce courrier ? Il repassera en correction."
+        title={instance.courrier?.subject ?? instance.document?.originalName ?? instance.circuit.name}
+        subtitle={`Étape : ${instance.currentStep.actionType ?? instance.currentStep.order}`}
+        description="Êtes-vous sûr de vouloir rejeter cette étape ? Le circuit reviendra à l'étape précédente, ou le courrier repassera en correction s'il n'y en a pas."
         confirmLabel="Oui, rejeter"
         confirmClassName="bg-destructive text-white hover:bg-destructive/90"
         cancelLabel="Annuler"
         variant="destructive"
-        onConfirm={() => decide(false)}
-        isPending={isPending}
+        onConfirm={() => handleDecide(false)}
+        isPending={decide.isPending}
         open={openDialog === "reject"}
         onOpenChange={(open) => setOpenDialog(open ? "reject" : null)}
       />
