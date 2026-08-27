@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { Ellipsis } from "lucide-react"
 
@@ -10,15 +11,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArchivedMailDeleteDialog } from "@/components/archives/archived-mail-delete-dialog"
 import { ArchivedMailRestoreDialog } from "@/components/archives/archived-mail-restore-dialog"
-import { ArchivedMailViewDialog } from "@/components/archives/archived-mail-view-dialog"
-import type { ArchivedMail } from "@/components/archives/types"
+import type { Courrier } from "@/hooks/courrier/type"
 
-type OpenDialog = "view" | "restore" | "delete" | null
-
-export function ArchivedMailRowActions({ mail }: { mail: ArchivedMail }) {
-  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+// No hard-delete endpoint exists for Courrier once archived — only "Voir"
+// and "Restaurer" are real actions here.
+export function ArchivedMailRowActions({ mail }: { mail: Courrier }) {
+  const [restoreOpen, setRestoreOpen] = useState(false)
+  const href =
+    mail.direction === "ENTRANT"
+      ? `/courriers/entrants/${mail.id}`
+      : `/courriers/sortants/${mail.id}`
 
   return (
     <>
@@ -32,35 +35,19 @@ export function ArchivedMailRowActions({ mail }: { mail: ArchivedMail }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem render={<Link href={href} />}>
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("restore")}>
+          <DropdownMenuItem onClick={() => setRestoreOpen(true)}>
             Restaurer
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("delete")}
-          >
-            Supprimer définitivement
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ArchivedMailViewDialog
-        mail={mail}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
       <ArchivedMailRestoreDialog
         mail={mail}
-        open={openDialog === "restore"}
-        onOpenChange={(open) => setOpenDialog(open ? "restore" : null)}
-      />
-      <ArchivedMailDeleteDialog
-        mail={mail}
-        open={openDialog === "delete"}
-        onOpenChange={(open) => setOpenDialog(open ? "delete" : null)}
+        open={restoreOpen}
+        onOpenChange={setRestoreOpen}
       />
     </>
   )

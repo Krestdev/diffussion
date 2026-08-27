@@ -1,69 +1,78 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { auditLogs } from "@/components/audit/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
+import { ActivityLevelBadge } from "@/components/audit/activity-level-badge"
 import { AuditRowActions } from "@/components/audit/audit-row-actions"
+import { useActivityLogs } from "@/hooks/activity/useActivity"
+import type { ActivityLog } from "@/hooks/activity/type"
 
 export function AuditTable() {
+  const { data, isLoading } = useActivityLogs({ take: 100 })
+
+  const columns = useMemo<ColumnDef<ActivityLog>[]>(
+    () => [
+      {
+        id: "reference",
+        header: "Référence",
+        cell: ({ row }) => (
+          <span className="font-mono text-xs">
+            {row.original.id.slice(0, 8)}
+          </span>
+        ),
+      },
+      { accessorKey: "action", header: "Action" },
+      {
+        id: "user",
+        header: "Utilisateur",
+        cell: ({ row }) => row.original.actorLabel ?? "Système",
+      },
+      {
+        id: "entityType",
+        header: "Type d’objet",
+        cell: ({ row }) => row.original.entityType ?? "—",
+      },
+      {
+        id: "objectReference",
+        header: "Référence de l’objet",
+        cell: ({ row }) =>
+          row.original.entityId ? (
+            <span className="font-mono text-xs">
+              {row.original.entityId.slice(0, 8)}
+            </span>
+          ) : (
+            "—"
+          ),
+      },
+      {
+        id: "level",
+        header: "Niveau",
+        cell: ({ row }) => <ActivityLevelBadge level={row.original.level} />,
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Date",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <AuditRowActions log={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Action
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Utilisateur
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Type d’objet
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence de l’objet
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Date
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {auditLogs.map((log) => (
-          <TableRow key={log.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.reference}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.action}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.user}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.entityType}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.objectReference}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {log.date}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <AuditRowActions log={log} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data?.data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucune entrée d’audit"
+    />
   )
 }

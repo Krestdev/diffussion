@@ -13,7 +13,7 @@ import {
 import { RoleDeleteDialog } from "@/components/roles/role-delete-dialog"
 import { RoleEditDialog } from "@/components/roles/role-edit-dialog"
 import { RoleViewDialog } from "@/components/roles/role-view-dialog"
-import type { Role } from "@/components/roles/types"
+import type { Role } from "@/hooks/role/type"
 
 type OpenDialog = "view" | "edit" | "delete" | null
 

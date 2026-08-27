@@ -1,12 +1,12 @@
-import type { SiteStatus } from "@/components/sites/types"
+import type { SiteStatus } from "@/hooks/site/type"
 import { cn } from "@/lib/utils"
 
 const styles: Record<SiteStatus, { label: string; className: string }> = {
-  active: {
+  ACTIVE: {
     label: "Actif",
     className: "border-[#bbf7d0] bg-[#dcfce7] text-[#16a34a]",
   },
-  inactive: {
+  INACTIVE: {
     label: "Inactif",
     className: "border-[#e4e4e7] bg-[#f4f4f5] text-[#52525b]",
   },

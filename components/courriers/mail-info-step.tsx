@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -10,27 +8,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  correspondents,
-  generatedReferences,
-  mailTypes,
-  natures,
-} from "@/components/courriers/data"
-import type { Mail } from "@/components/courriers/types"
-import { UserCombobox } from "@/components/shared/user-combobox"
+import { Textarea } from "@/components/ui/textarea"
+import { useCorrespondents } from "@/hooks/correspondent/useCorrespondent"
+import { useCourrierNatures } from "@/hooks/courrierNature/useCourrierNature"
+import { useDossiers } from "@/hooks/dossier/useDossier"
+import type { MailDraft } from "@/components/courriers/types"
 
 export function MailInfoStep({
-  mail,
+  draft,
+  onChange,
   onNext,
 }: {
-  mail?: Mail
+  draft: MailDraft
+  onChange: (draft: MailDraft) => void
   onNext: () => void
 }) {
-  const [reference, setReference] = useState("")
-  const [correspondent, setCorrespondent] = useState(mail?.correspondent ?? "")
-  const [nature, setNature] = useState(mail?.nature ?? "")
-  const [type, setType] = useState(mail?.type ?? "")
-  const [originMail, setOriginMail] = useState(mail?.originMail ?? "")
+  const { data: dossiers } = useDossiers()
+  const { data: correspondents } = useCorrespondents()
+  const { data: natures } = useCourrierNatures()
+
+  function set<K extends keyof MailDraft>(key: K, value: MailDraft[K]) {
+    onChange({ ...draft, [key]: value })
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -42,56 +41,35 @@ export function MailInfoStep({
       onSubmit={handleSubmit}
       className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2"
     >
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 sm:col-span-2">
         <label className="text-sm font-medium text-[#18181b]">
-          Référence <span className="text-[#dc2626]">*</span>
+          Objet <span className="text-[#dc2626]">*</span>
         </label>
-        <Select
-          value={reference}
-          onValueChange={(v) => setReference(v ?? "")}
+        <Textarea
           required
-        >
-          <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
-            <SelectValue placeholder="Sélectionner" />
-          </SelectTrigger>
-          <SelectContent>
-            {generatedReferences.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#18181b]">
-          Correspondant <span className="text-[#dc2626]">*</span>
-        </label>
-        <UserCombobox
-          users={correspondents}
-          value={correspondent}
-          onChange={setCorrespondent}
-          placeholder="Rechercher un correspondant"
+          value={draft.subject}
+          onChange={(event) => set("subject", event.target.value)}
+          placeholder="ex. Demande d'information sur le chantier"
+          className="min-h-[60px] rounded border border-[#e4e4e7] px-3 py-2"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#18181b]">
-          Nature <span className="text-[#dc2626]">*</span>
+          Dossier <span className="text-[#dc2626]">*</span>
         </label>
         <Select
-          value={nature}
-          onValueChange={(v) => setNature(v ?? "")}
+          value={draft.dossierId}
+          onValueChange={(v) => set("dossierId", v ?? "")}
           required
         >
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
             <SelectValue placeholder="Sélectionner" />
           </SelectTrigger>
           <SelectContent>
-            {natures.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+            {dossiers?.data.map((dossier) => (
+              <SelectItem key={dossier.id} value={dossier.id}>
+                {dossier.title}
               </SelectItem>
             ))}
           </SelectContent>
@@ -100,38 +78,54 @@ export function MailInfoStep({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[#18181b]">
-          Type <span className="text-[#dc2626]">*</span>
-        </label>
-        <Select value={type} onValueChange={(v) => setType(v ?? "")} required>
-          <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
-            <SelectValue placeholder="Sélectionner" />
-          </SelectTrigger>
-          <SelectContent>
-            {mailTypes.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#18181b]">
-          Courrier d’origine
+          Correspondant
         </label>
         <Select
-          value={originMail}
-          onValueChange={(v) => setOriginMail(v ?? "")}
+          value={draft.correspondentId}
+          onValueChange={(v) => set("correspondentId", v ?? "")}
         >
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
             <SelectValue placeholder="Sélectionner" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="M-01">M-01</SelectItem>
-            <SelectItem value="M-02">M-02</SelectItem>
+            {correspondents?.data.map((correspondent) => (
+              <SelectItem key={correspondent.id} value={correspondent.id}>
+                {correspondent.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#18181b]">Nature</label>
+        <Select
+          value={draft.natureId}
+          onValueChange={(v) => set("natureId", v ?? "")}
+        >
+          <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
+            <SelectValue placeholder="Sélectionner" />
+          </SelectTrigger>
+          <SelectContent>
+            {natures?.map((nature) => (
+              <SelectItem key={nature.id} value={nature.id}>
+                {nature.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[#18181b]">
+          Référence (facultatif)
+        </label>
+        <input
+          value={draft.reference}
+          onChange={(event) => set("reference", event.target.value)}
+          placeholder="Référence imprimée sur le courrier"
+          className="h-9 rounded border border-[#e4e4e7] px-4 text-sm text-[#2f2f2f] outline-none placeholder:text-[#b0b0b0]"
+        />
       </div>
 
       <div className="sm:col-span-2">

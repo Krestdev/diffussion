@@ -1,23 +1,32 @@
+"use client"
+
 import { SummaryMetrics } from "@/components/shared/summary-metrics"
-import { approvalQueueMetrics } from "@/components/courriers-sortants/approbation-data"
+import { useCourriers } from "@/hooks/courrier/useCourrier"
 
 export function ApprobationMetrics() {
+  const { data: verification } = useCourriers({ direction: "SORTANT", status: "EN_VERIFICATION", take: 1 })
+  const { data: validation } = useCourriers({ direction: "SORTANT", status: "EN_VALIDATION", take: 1 })
+  const { data: accepted } = useCourriers({ direction: "SORTANT", status: "VALIDE", take: 1 })
+  const { data: rejected } = useCourriers({ direction: "SORTANT", status: "A_CORRIGER", take: 1 })
+
+  const pending = (verification?.total ?? 0) + (validation?.total ?? 0)
+
   return (
     <SummaryMetrics
       metrics={[
         {
           label: "En attente",
-          value: approvalQueueMetrics.pending,
+          value: pending,
           className: "border-[#eb88b4] bg-[#9e1351]",
         },
         {
           label: "Acceptés",
-          value: approvalQueueMetrics.accepted,
+          value: accepted?.total ?? 0,
           className: "border-[#bbf7d0] bg-[#15803d]",
         },
         {
           label: "Rejetés",
-          value: approvalQueueMetrics.rejected,
+          value: rejected?.total ?? 0,
           className: "border-[#dfdfdf] bg-white",
           labelClassName: "text-[#52525b]",
           valueClassName: "text-[#2f2f2f]",

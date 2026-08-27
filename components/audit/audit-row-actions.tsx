@@ -11,12 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AuditViewDialog } from "@/components/audit/audit-view-dialog"
-import type { AuditLog } from "@/components/audit/types"
+import type { ActivityLog } from "@/hooks/activity/type"
 
-type OpenDialog = "view" | null
-
-export function AuditRowActions({ log }: { log: AuditLog }) {
-  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+// A log entry is an immutable record — "Voir" is the only real action.
+export function AuditRowActions({ log }: { log: ActivityLog }) {
+  const [viewOpen, setViewOpen] = useState(false)
 
   return (
     <>
@@ -30,17 +29,13 @@ export function AuditRowActions({ log }: { log: AuditLog }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem onClick={() => setViewOpen(true)}>
             Voir
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <AuditViewDialog
-        log={log}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
+      <AuditViewDialog log={log} open={viewOpen} onOpenChange={setViewOpen} />
     </>
   )
 }

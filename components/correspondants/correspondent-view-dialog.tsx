@@ -2,21 +2,21 @@ import {
   BadgeQuestionMark,
   Building2,
   Calendar,
+  CircleHelp,
   Hash,
   Mail,
-  Mailbox,
-  Map,
   MapPin,
+  Map,
   Phone,
   SquareUser,
-  UserRound,
   type LucideIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Correspondent } from "@/components/correspondants/types"
+import { CorrespondentStatusBadge } from "@/components/correspondants/correspondent-status-badge"
+import type { Correspondent } from "@/hooks/correspondent/type"
 
 function InfoRow({
   icon: Icon,
@@ -76,18 +76,18 @@ export function CorrespondentViewDialog({
           <InfoRow
             icon={BadgeQuestionMark}
             label="Type"
-            value={correspondent.type}
+            value={correspondent.type?.name ?? "—"}
           />
-          <InfoRow icon={Map} label="Ville" value={correspondent.city} />
+          <InfoRow icon={Map} label="Ville" value={correspondent.city ?? "—"} />
           <InfoRow
             icon={SquareUser}
             label="Contact principal"
-            value={correspondent.mainContact}
+            value={correspondent.mainContact ?? "—"}
           />
           <InfoRow
             icon={Phone}
             label="Numéro de téléphone"
-            value={correspondent.phone}
+            value={correspondent.phone ?? "—"}
           />
           <InfoRow
             icon={MapPin}
@@ -100,24 +100,19 @@ export function CorrespondentViewDialog({
             value={correspondent.email || "--/--"}
           />
           <InfoRow
-            icon={Mailbox}
-            label="Courriers"
-            value={correspondent.mailsCount}
-          />
-          <InfoRow
-            icon={UserRound}
-            label="Créé par"
-            value={correspondent.createdBy}
+            icon={CircleHelp}
+            label="Statut"
+            value={<CorrespondentStatusBadge status={correspondent.status} />}
           />
           <InfoRow
             icon={Calendar}
             label="Créé le"
-            value={correspondent.createdAt}
+            value={new Date(correspondent.createdAt).toLocaleDateString("fr-FR")}
           />
           <InfoRow
             icon={Calendar}
             label="Modifié le"
-            value={correspondent.updatedAt}
+            value={new Date(correspondent.updatedAt).toLocaleDateString("fr-FR")}
           />
         </div>
         <DialogFooter>

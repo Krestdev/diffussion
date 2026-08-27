@@ -1,69 +1,59 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { archivedFolders } from "@/components/archives/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
 import { ArchivedFolderRowActions } from "@/components/archives/archived-folder-row-actions"
+import { useDossiers } from "@/hooks/dossier/useDossier"
+import type { Dossier } from "@/hooks/dossier/type"
 
 export function ArchivedFoldersTable() {
+  const { data, isLoading } = useDossiers({ status: "ARCHIVED", take: 100 })
+
+  const columns = useMemo<ColumnDef<Dossier>[]>(
+    () => [
+      { accessorKey: "number", header: "Référence" },
+      { accessorKey: "title", header: "Intitulé" },
+      {
+        id: "courriers",
+        header: "Courriers",
+        cell: ({ row }) => row.original._count.courriers,
+      },
+      {
+        id: "site",
+        header: "Site",
+        cell: ({ row }) => row.original.site.name,
+      },
+      {
+        id: "type",
+        header: "Type",
+        cell: ({ row }) => row.original.type?.name ?? "—",
+      },
+      {
+        id: "archivedAt",
+        header: "Archivé le",
+        cell: ({ row }) =>
+          row.original.archivedAt
+            ? new Date(row.original.archivedAt).toLocaleDateString("fr-FR")
+            : "—",
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <ArchivedFolderRowActions folder={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Intitulé
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Courriers
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Site
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Type
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Archivé le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {archivedFolders.map((folder) => (
-          <TableRow key={folder.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.title}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.mailsCount}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.site}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.type}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {folder.archivedAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <ArchivedFolderRowActions folder={folder} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data?.data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucun dossier archivé"
+    />
   )
 }

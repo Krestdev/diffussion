@@ -1,12 +1,9 @@
 import {
-  BookUser,
   Calendar,
   CircleHelp,
   CircleUser,
-  FolderOpen,
   Hash,
   Map,
-  UserRound,
   type LucideIcon,
 } from "lucide-react"
 
@@ -14,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
 import { SiteStatusBadge } from "@/components/sites/site-status-badge"
-import type { Site } from "@/components/sites/types"
+import type { Site } from "@/hooks/site/type"
 
 function InfoRow({
   icon: Icon,
@@ -60,11 +57,11 @@ export function SiteViewDialog({
             label="Référence"
             value={
               <span className="rounded bg-[#f2cfde] px-1.5 py-0.5 text-[#2f2f2f]">
-                {site.referenceNumber}
+                {site.code}
               </span>
             }
           />
-          <InfoRow icon={Map} label="Ville" value={site.city} />
+          <InfoRow icon={Map} label="Ville" value={site.city ?? "—"} />
           <InfoRow
             icon={CircleHelp}
             label="Statut"
@@ -73,13 +70,18 @@ export function SiteViewDialog({
           <InfoRow
             icon={CircleUser}
             label="Responsable du Site"
-            value={site.manager}
+            value={site.responsible?.name ?? "—"}
           />
-          <InfoRow icon={FolderOpen} label="Dossiers" value={site.folderCount} />
-          <InfoRow icon={BookUser} label="Employés" value={site.employeeCount} />
-          <InfoRow icon={UserRound} label="Créé par" value={site.createdBy} />
-          <InfoRow icon={Calendar} label="Créé le" value={site.createdAt} />
-          <InfoRow icon={Calendar} label="Modifié le" value={site.updatedAt} />
+          <InfoRow
+            icon={Calendar}
+            label="Créé le"
+            value={new Date(site.createdAt).toLocaleDateString("fr-FR")}
+          />
+          <InfoRow
+            icon={Calendar}
+            label="Modifié le"
+            value={new Date(site.updatedAt).toLocaleDateString("fr-FR")}
+          />
         </div>
         <DialogFooter>
           <Button

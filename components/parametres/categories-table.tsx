@@ -1,57 +1,51 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { documentCategories } from "@/components/parametres/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
 import { CategoryRowActions } from "@/components/parametres/category-row-actions"
+import { useCategories } from "@/hooks/category/useCategory"
+import type { Category } from "@/hooks/category/type"
 
 export function CategoriesTable() {
+  const { data, isLoading } = useCategories()
+
+  const columns = useMemo<ColumnDef<Category>[]>(
+    () => [
+      {
+        id: "code",
+        header: "Référence",
+        cell: ({ row }) => row.original.code ?? "—",
+      },
+      { accessorKey: "label", header: "Libellé" },
+      {
+        id: "description",
+        header: "Description",
+        cell: ({ row }) => row.original.description ?? "—",
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Créé le",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <CategoryRowActions category={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Libellé
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Description
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Créé le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {documentCategories.map((category) => (
-          <TableRow key={category.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {category.reference}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {category.label}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {category.description}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {category.createdAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <CategoryRowActions category={category} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucune catégorie"
+    />
   )
 }

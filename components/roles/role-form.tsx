@@ -6,25 +6,42 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { permissionOptions } from "@/components/roles/data"
+import { toast } from "@/components/ui/toast"
+import { usePermissions } from "@/hooks/permission/usePermission"
+import { useCreateRole } from "@/hooks/role/useRole"
 
 export function RoleForm() {
   const router = useRouter()
 
   const [name, setName] = useState("")
-  const [permissions, setPermissions] = useState<string[]>([])
+  const [permissionIds, setPermissionIds] = useState<string[]>([])
 
-  function togglePermission(permission: string, checked: boolean) {
-    setPermissions((current) =>
-      checked
-        ? [...current, permission]
-        : current.filter((item) => item !== permission)
+  const { data: permissionOptions } = usePermissions()
+  const createRole = useCreateRole()
+
+  function togglePermission(id: string, checked: boolean) {
+    setPermissionIds((current) =>
+      checked ? [...current, id] : current.filter((item) => item !== id)
     )
   }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    router.push("/administration/roles")
+    createRole.mutate(
+      { name, permissionIds },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Rôle créé", type: "success" })
+          router.push("/administration/roles")
+        },
+        onError: () =>
+          toast.add({
+            title: "Échec de la création",
+            description: "Veuillez réessayer.",
+            type: "error",
+          }),
+      }
+    )
   }
 
   return (
@@ -47,18 +64,18 @@ export function RoleForm() {
           Permissions <span className="text-[#dc2626]">*</span>
         </label>
         <div className="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
-          {permissionOptions.map((permission) => (
+          {permissionOptions?.map((permission) => (
             <label
-              key={permission}
+              key={permission.id}
               className="flex items-center gap-2 text-sm text-[#2f2f2f]"
             >
               <Checkbox
-                checked={permissions.includes(permission)}
+                checked={permissionIds.includes(permission.id)}
                 onCheckedChange={(checked) =>
-                  togglePermission(permission, checked === true)
+                  togglePermission(permission.id, checked === true)
                 }
               />
-              {permission}
+              {permission.description ?? permission.code}
             </label>
           ))}
         </div>
@@ -67,6 +84,7 @@ export function RoleForm() {
       <div>
         <Button
           type="submit"
+          disabled={createRole.isPending}
           className="h-11 rounded-lg bg-[#700032] px-5 text-base font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
         >
           Créer le rôle

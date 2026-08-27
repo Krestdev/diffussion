@@ -13,7 +13,7 @@ import {
 import { CorrespondentDeleteDialog } from "@/components/correspondants/correspondent-delete-dialog"
 import { CorrespondentEditDialog } from "@/components/correspondants/correspondent-edit-dialog"
 import { CorrespondentViewDialog } from "@/components/correspondants/correspondent-view-dialog"
-import type { Correspondent } from "@/components/correspondants/types"
+import type { Correspondent } from "@/hooks/correspondent/type"
 
 type OpenDialog = "view" | "edit" | "delete" | null
 

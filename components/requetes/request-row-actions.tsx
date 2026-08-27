@@ -13,12 +13,13 @@ import {
 import { RequestAcceptDialog } from "@/components/requetes/request-accept-dialog"
 import { RequestRejectDialog } from "@/components/requetes/request-reject-dialog"
 import { RequestViewDialog } from "@/components/requetes/request-view-dialog"
-import type { Request } from "@/components/requetes/types"
+import type { Instruction } from "@/hooks/instruction/type"
 
 type OpenDialog = "view" | "accept" | "reject" | null
 
-export function RequestRowActions({ request }: { request: Request }) {
+export function RequestRowActions({ request }: { request: Instruction }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+  const isPending = request.status === "AFFECTEE"
 
   return (
     <>
@@ -35,15 +36,19 @@ export function RequestRowActions({ request }: { request: Request }) {
           <DropdownMenuItem onClick={() => setOpenDialog("view")}>
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("accept")}>
-            Accepter
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("reject")}
-          >
-            Rejeter
-          </DropdownMenuItem>
+          {isPending && (
+            <DropdownMenuItem onClick={() => setOpenDialog("accept")}>
+              Accepter
+            </DropdownMenuItem>
+          )}
+          {isPending && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => setOpenDialog("reject")}
+            >
+              Rejeter
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

@@ -13,8 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import { correspondentTypes } from "@/components/correspondants/data"
-import type { Correspondent } from "@/components/correspondants/types"
+import { toast } from "@/components/ui/toast"
+import { useCorrespondentTypes } from "@/hooks/correspondentType/useCorrespondentType"
+import { useUpdateCorrespondent } from "@/hooks/correspondent/useCorrespondent"
+import type { Correspondent } from "@/hooks/correspondent/type"
 
 export function CorrespondentEditDialog({
   correspondent,
@@ -26,12 +28,36 @@ export function CorrespondentEditDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [name, setName] = useState(correspondent.name)
-  const [city, setCity] = useState(correspondent.city)
-  const [type, setType] = useState<string>(correspondent.type)
-  const [mainContact, setMainContact] = useState(correspondent.mainContact)
-  const [phone, setPhone] = useState(correspondent.phone)
-  const [address, setAddress] = useState(correspondent.address)
-  const [email, setEmail] = useState(correspondent.email)
+  const [city, setCity] = useState(correspondent.city ?? "")
+  const [typeId, setTypeId] = useState(correspondent.typeId ?? "")
+  const [mainContact, setMainContact] = useState(correspondent.mainContact ?? "")
+  const [phone, setPhone] = useState(correspondent.phone ?? "")
+  const [address, setAddress] = useState(correspondent.address ?? "")
+  const [email, setEmail] = useState(correspondent.email ?? "")
+
+  const { data: types } = useCorrespondentTypes()
+  const updateCorrespondent = useUpdateCorrespondent()
+
+  function handleSubmit() {
+    updateCorrespondent.mutate(
+      {
+        id: correspondent.id,
+        body: { name, city, typeId, mainContact, phone, address, email },
+      },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Correspondant modifié", type: "success" })
+          onOpenChange(false)
+        },
+        onError: () =>
+          toast.add({
+            title: "Échec de la modification",
+            description: "Veuillez réessayer.",
+            type: "error",
+          }),
+      }
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -74,17 +100,17 @@ export function CorrespondentEditDialog({
               Type <span className="text-[#dc2626]">*</span>
             </label>
             <Select
-              value={type}
-              onValueChange={(value) => setType(value ?? "")}
+              value={typeId}
+              onValueChange={(value) => setTypeId(value ?? "")}
               required
             >
               <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
                 <SelectValue placeholder="Sélectionner" />
               </SelectTrigger>
               <SelectContent>
-                {correspondentTypes.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
+                {types?.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -145,7 +171,8 @@ export function CorrespondentEditDialog({
         <DialogFooter>
           <Button
             className="bg-[#700032] text-sm font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
-            onClick={() => onOpenChange(false)}
+            disabled={updateCorrespondent.isPending}
+            onClick={handleSubmit}
           >
             Enregistrer
           </Button>

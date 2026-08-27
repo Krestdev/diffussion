@@ -1,28 +1,13 @@
-export type RequestPriority = "urgent" | "normal" | "faible"
+import type { InstructionStatus } from "@/hooks/instruction/type"
 
 export type RequestStatus = "en-attente" | "accepte" | "rejete"
 
-export type RequestDeliverable = {
-  /** Table position label, e.g. "Livrable 1". */
-  label: string
-  title: string
-  status: RequestStatus
-}
-
-export type Request = {
-  id: string
-  /** Table code, e.g. "T-6899". */
-  code: string
-  title: string
-  folder: string
-  description: string
-  status: RequestStatus
-  priority: RequestPriority
-  supervisor: string
-  dueDate: string
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  receivedAt: string
-  deliverables: RequestDeliverable[]
+// The Requêtes list simplifies the full Instruction state machine down to
+// the 3 buckets this UI exposes: AFFECTEE is awaiting my decision, REFUSEE
+// is a rejection, and everything past that point (EN_COURS and beyond)
+// counts as accepted.
+export function requestStatusBucket(status: InstructionStatus): RequestStatus {
+  if (status === "AFFECTEE") return "en-attente"
+  if (status === "REFUSEE") return "rejete"
+  return "accepte"
 }

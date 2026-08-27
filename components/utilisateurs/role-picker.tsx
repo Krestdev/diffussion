@@ -8,29 +8,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { availableRoles } from "@/components/utilisateurs/data"
 import { RoleBadge } from "@/components/utilisateurs/role-badge"
+import { useRoles } from "@/hooks/role/useRole"
 
 export function RolePicker({
-  roles,
+  roleIds,
   onChange,
 }: {
-  roles: string[]
-  onChange: (roles: string[]) => void
+  roleIds: string[]
+  onChange: (roleIds: string[]) => void
 }) {
   const [open, setOpen] = useState(false)
-  const remaining = availableRoles.filter((role) => !roles.includes(role))
+  const { data: roles } = useRoles()
+
+  const selected = roles?.filter((role) => roleIds.includes(role.id)) ?? []
+  const remaining = roles?.filter((role) => !roleIds.includes(role.id)) ?? []
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {roles.map((role) => (
+      {selected.map((role) => (
         <button
-          key={role}
+          key={role.id}
           type="button"
           title="Retirer ce rôle"
-          onClick={() => onChange(roles.filter((item) => item !== role))}
+          onClick={() => onChange(roleIds.filter((id) => id !== role.id))}
         >
-          <RoleBadge role={role} />
+          <RoleBadge role={role.name} />
         </button>
       ))}
       <Popover open={open} onOpenChange={setOpen}>
@@ -46,15 +49,15 @@ export function RolePicker({
           )}
           {remaining.map((role) => (
             <button
-              key={role}
+              key={role.id}
               type="button"
               className="flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
               onClick={() => {
-                onChange([...roles, role])
+                onChange([...roleIds, role.id])
                 setOpen(false)
               }}
             >
-              {role}
+              {role.name}
             </button>
           ))}
         </PopoverContent>

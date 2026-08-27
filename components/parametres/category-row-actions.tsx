@@ -10,16 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryViewDialog } from "@/components/parametres/category-view-dialog"
-import type { DocumentCategory } from "@/components/parametres/types"
+import { CategoryFormDialog } from "@/components/parametres/category-form-dialog"
+import { CategoryDeleteDialog } from "@/components/parametres/category-delete-dialog"
+import type { Category } from "@/hooks/category/type"
 
-type OpenDialog = "view" | null
+type OpenDialog = "edit" | "delete" | null
 
-export function CategoryRowActions({
-  category,
-}: {
-  category: DocumentCategory
-}) {
+export function CategoryRowActions({ category }: { category: Category }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
 
   return (
@@ -34,16 +31,27 @@ export function CategoryRowActions({
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
-            Voir
+          <DropdownMenuItem onClick={() => setOpenDialog("edit")}>
+            Modifier
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => setOpenDialog("delete")}
+          >
+            Supprimer
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CategoryViewDialog
+      <CategoryFormDialog
         category={category}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
+        open={openDialog === "edit"}
+        onOpenChange={(open) => setOpenDialog(open ? "edit" : null)}
+      />
+      <CategoryDeleteDialog
+        category={category}
+        open={openDialog === "delete"}
+        onOpenChange={(open) => setOpenDialog(open ? "delete" : null)}
       />
     </>
   )

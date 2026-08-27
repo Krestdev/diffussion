@@ -1,80 +1,64 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { PriorityBadge } from "@/components/shared/priority-badge"
-import { OutgoingMailRowActions } from "@/components/courriers-sortants/outgoing-mail-row-actions"
-import type { OutgoingMail } from "@/components/courriers-sortants/types"
+"use client"
 
-export function OutgoingMailsTable({ mails }: { mails: OutgoingMail[] }) {
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
+import { PriorityBadge } from "@/components/shared/priority-badge"
+import { toBadgePriority } from "@/lib/priority"
+import { OutgoingMailRowActions } from "@/components/courriers-sortants/outgoing-mail-row-actions"
+import type { Courrier } from "@/hooks/courrier/type"
+
+export function OutgoingMailsTable({
+  mails,
+  isLoading,
+}: {
+  mails: Courrier[]
+  isLoading?: boolean
+}) {
+  const columns = useMemo<ColumnDef<Courrier>[]>(
+    () => [
+      { accessorKey: "number", header: "Référence" },
+      { accessorKey: "subject", header: "Objet" },
+      {
+        id: "dossier",
+        header: "Dossier",
+        cell: ({ row }) => row.original.dossier.title,
+      },
+      {
+        id: "correspondent",
+        header: "Correspondant",
+        cell: ({ row }) => row.original.correspondent?.name ?? "—",
+      },
+      {
+        id: "priority",
+        header: "Priorité",
+        cell: ({ row }) => (
+          <PriorityBadge priority={toBadgePriority(row.original.dossier.priority)} />
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Enregistré le",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <OutgoingMailRowActions mail={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Objet
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Dossier
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Correspondant
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Priorité
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Enregistré le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {mails.length === 0 && (
-          <TableRow>
-            <TableCell
-              colSpan={7}
-              className="border border-[#dfdfdf] py-8 text-center text-sm text-[#71717a]"
-            >
-              Aucun courrier dans cette catégorie
-            </TableCell>
-          </TableRow>
-        )}
-        {mails.map((mail) => (
-          <TableRow key={mail.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {mail.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {mail.subject}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {mail.folder}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {mail.correspondent}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf]">
-              <PriorityBadge priority={mail.priority} />
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {mail.registeredAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <OutgoingMailRowActions mail={mail} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={mails}
+      isLoading={isLoading}
+      emptyMessage="Aucun courrier dans cette catégorie"
+    />
   )
 }

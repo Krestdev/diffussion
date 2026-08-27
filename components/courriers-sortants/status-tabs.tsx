@@ -1,20 +1,22 @@
 "use client"
 
-import { statusTabs } from "@/components/courriers-sortants/data"
-import type { OutgoingMailStatus } from "@/components/courriers-sortants/types"
+import { statusGroupTabs, type OutgoingMailStatusGroup } from "@/components/courriers-sortants/status-groups"
 import { cn } from "@/lib/utils"
 
 export function StatusTabs({
   value,
   onChange,
+  counts,
 }: {
-  value: OutgoingMailStatus
-  onChange: (status: OutgoingMailStatus) => void
+  value: OutgoingMailStatusGroup
+  onChange: (status: OutgoingMailStatusGroup) => void
+  counts?: Partial<Record<OutgoingMailStatusGroup, number>>
 }) {
   return (
     <div className="flex w-fit items-center overflow-hidden rounded border border-[#dfdfdf] bg-white">
-      {statusTabs.map((tab) => {
+      {statusGroupTabs.map((tab) => {
         const isActive = tab.value === value
+        const count = counts?.[tab.value]
 
         return (
           <button
@@ -29,9 +31,9 @@ export function StatusTabs({
             )}
           >
             {tab.label}
-            {isActive && tab.count !== undefined && (
+            {isActive && count !== undefined && (
               <span className="flex min-w-[22px] items-center justify-center rounded bg-white p-1 text-xs font-semibold text-[#2f2f2f]">
-                {tab.count}
+                {count}
               </span>
             )}
           </button>

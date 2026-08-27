@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { TaskCompleteDialog } from "@/components/taches/task-complete-dialog"
 import { TaskViewDialog } from "@/components/taches/task-view-dialog"
-import type { Task } from "@/components/taches/types"
+import type { Instruction } from "@/hooks/instruction/type"
 
 type OpenDialog = "view" | "complete" | null
 
-export function TaskRowActions({ task }: { task: Task }) {
+const COMPLETABLE_STATUSES = ["EN_COURS", "A_CORRIGER"]
+
+export function TaskRowActions({ task }: { task: Instruction }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
 
   return (
@@ -34,9 +36,11 @@ export function TaskRowActions({ task }: { task: Task }) {
           <DropdownMenuItem onClick={() => setOpenDialog("view")}>
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("complete")}>
-            Compléter
-          </DropdownMenuItem>
+          {COMPLETABLE_STATUSES.includes(task.status) && (
+            <DropdownMenuItem onClick={() => setOpenDialog("complete")}>
+              Compléter
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

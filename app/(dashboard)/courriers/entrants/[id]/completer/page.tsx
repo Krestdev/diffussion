@@ -1,18 +1,25 @@
+"use client"
+
+import { use } from "react"
 import { notFound } from "next/navigation"
 
 import { MailCompleteForm } from "@/components/courriers/mail-complete-form"
-import { getMail } from "@/components/courriers/data"
+import { useCourrier } from "@/hooks/courrier/useCourrier"
 
-export default async function Page({
+export default function Page({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await params
-  const mail = getMail(id)
+  const { id } = use(params)
+  const { data: mail, isLoading, isError } = useCourrier(id)
 
-  if (!mail) {
+  if (isError) {
     notFound()
+  }
+
+  if (isLoading || !mail) {
+    return <p className="text-sm text-[#71717a]">Chargement…</p>
   }
 
   return <MailCompleteForm mail={mail} />

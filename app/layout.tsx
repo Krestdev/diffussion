@@ -2,10 +2,6 @@ import { Geist_Mono, Inter } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import Providers from "@/provider/providers"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { SiteHeader } from "@/components/layout/site-header"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -32,19 +28,7 @@ export default function RootLayout({
       )}
     >
       <body>
-        <Providers>
-          <TooltipProvider>
-            <SidebarProvider
-              style={{ "--sidebar-width": "15rem" } as React.CSSProperties}
-            >
-              <AppSidebar />
-              <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col gap-6 p-5">{children}</div>
-              </SidebarInset>
-            </SidebarProvider>
-          </TooltipProvider>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

@@ -14,7 +14,7 @@ import { UserDeleteDialog } from "@/components/utilisateurs/user-delete-dialog"
 import { UserEditDialog } from "@/components/utilisateurs/user-edit-dialog"
 import { UserSuspendDialog } from "@/components/utilisateurs/user-suspend-dialog"
 import { UserViewDialog } from "@/components/utilisateurs/user-view-dialog"
-import type { AppUser } from "@/components/utilisateurs/types"
+import type { AppUser } from "@/hooks/adminUser/type"
 
 type OpenDialog = "view" | "edit" | "suspend" | "delete" | null
 
@@ -40,7 +40,7 @@ export function UserRowActions({ user }: { user: AppUser }) {
             Modifier
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenDialog("suspend")}>
-            {user.status === "actif" ? "Suspendre" : "Réactiver"}
+            {user.status === "ACTIVE" ? "Suspendre" : "Réactiver"}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"

@@ -10,7 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Role } from "@/components/roles/types"
+import { toast } from "@/components/ui/toast"
+import { useDeleteRole } from "@/hooks/role/useRole"
+import type { Role } from "@/hooks/role/type"
 
 export function RoleDeleteDialog({
   role,
@@ -21,6 +23,23 @@ export function RoleDeleteDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const deleteRole = useDeleteRole()
+
+  function handleDelete() {
+    deleteRole.mutate(role.id, {
+      onSuccess: () => {
+        toast.add({ title: "Rôle supprimé", type: "success" })
+        onOpenChange(false)
+      },
+      onError: () =>
+        toast.add({
+          title: "Échec de la suppression",
+          description: "Veuillez réessayer.",
+          type: "error",
+        }),
+    })
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="rounded-2xl">
@@ -39,7 +58,8 @@ export function RoleDeleteDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-sm font-medium tracking-normal text-white normal-case hover:bg-destructive/90"
-            onClick={() => onOpenChange(false)}
+            disabled={deleteRole.isPending}
+            onClick={handleDelete}
           >
             Supprimer
           </AlertDialogAction>

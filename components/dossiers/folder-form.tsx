@@ -13,46 +13,177 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { folderTypes, projects, sites, users } from "@/components/dossiers/data"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
 import { FolderAuthorizationsDialog } from "@/components/dossiers/folder-authorizations-dialog"
-import { FolderDocumentsField } from "@/components/dossiers/folder-documents-field"
-import type { Folder, FolderPermission } from "@/components/dossiers/types"
+import { DocumentUploadField } from "@/components/shared/document-upload-field"
+import type { FolderPermissionEntry } from "@/components/dossiers/types"
 import { UserCombobox } from "@/components/shared/user-combobox"
-
-function emptyPermissions(): FolderPermission[] {
-  return users.map((user) => ({ user, canView: false, canEdit: false }))
-}
+import { useAdminUsers } from "@/hooks/adminUser/useAdminUser"
+import type { AppUser } from "@/hooks/adminUser/type"
+import { useDossierTypes } from "@/hooks/dossierType/useDossierType"
+import type { DossierType } from "@/hooks/dossierType/type"
+import { useUploadDocument } from "@/hooks/document/useDocument"
+import { useProjects } from "@/hooks/project/useProject"
+import type { Project } from "@/hooks/project/type"
+import { useSites } from "@/hooks/site/useSite"
+import type { Site } from "@/hooks/site/type"
+import {
+  useCreateDossier,
+  useDossierAccess,
+  useSetDossierAccess,
+  useUpdateDossier,
+} from "@/hooks/dossier/useDossier"
+import type { Dossier, DossierAccessEntry } from "@/hooks/dossier/type"
 
 export function FolderForm({
   mode,
   folder,
 }: {
   mode: "create" | "edit"
-  folder?: Folder
+  folder?: Dossier
+}) {
+  const { data: types } = useDossierTypes()
+  const { data: projects } = useProjects()
+  const { data: sites } = useSites()
+  const { data: users } = useAdminUsers()
+  const { data: existingAccess } = useDossierAccess(
+    mode === "edit" && folder ? folder.id : ""
+  )
+
+  // Gate the actual form on every reference list it needs so the fields
+  // below (and the permissions grid's initial state) can be computed once,
+  // synchronously, from complete data — no effect-driven state sync.
+  const ready = Boolean(users) && (mode === "create" || Boolean(existingAccess))
+  if (!ready) {
+    return <p className="text-sm text-[#71717a]">Chargement…</p>
+  }
+
+  return (
+    <FolderFormFields
+      mode={mode}
+      folder={folder}
+      types={types ?? []}
+      projects={projects ?? []}
+      sites={sites ?? []}
+      users={users!}
+      existingAccess={existingAccess ?? []}
+    />
+  )
+}
+
+function FolderFormFields({
+  mode,
+  folder,
+  types,
+  projects,
+  sites,
+  users,
+  existingAccess,
+}: {
+  mode: "create" | "edit"
+  folder?: Dossier
+  types: DossierType[]
+  projects: Project[]
+  sites: Site[]
+  users: AppUser[]
+  existingAccess: DossierAccessEntry[]
 }) {
   const router = useRouter()
 
   const [title, setTitle] = useState(folder?.title ?? "")
   const [description, setDescription] = useState(folder?.description ?? "")
-  const [type, setType] = useState(folder?.type ?? "")
-  const [project, setProject] = useState(folder?.project ?? "")
-  const [site, setSite] = useState(folder?.site ?? "")
-  const [responsible, setResponsible] = useState(folder?.responsible ?? "")
-  const [permissions, setPermissions] = useState<FolderPermission[]>(
-    folder?.permissions ?? emptyPermissions()
+  const [typeId, setTypeId] = useState(folder?.typeId ?? "")
+  const [projectId, setProjectId] = useState(folder?.projectId ?? "")
+  const [siteId, setSiteId] = useState(folder?.siteId ?? "")
+  const [responsibleName, setResponsibleName] = useState(
+    folder?.responsible?.name ?? ""
   )
-  const [files, setFiles] = useState(folder?.files ?? [])
+  const [permissions, setPermissions] = useState<FolderPermissionEntry[]>(
+    () => {
+      const grants = new Map(
+        existingAccess.map((entry) => [entry.userId, entry])
+      )
+      return users.map((user) => {
+        const grant = grants.get(user.id)
+        return {
+          userId: user.id,
+          userName: user.name,
+          canView: grant?.canView ?? false,
+          canEdit: grant?.canEdit ?? false,
+        }
+      })
+    }
+  )
+  const [files, setFiles] = useState<File[]>([])
   const [authorizationsOpen, setAuthorizationsOpen] = useState(false)
 
-  const authorizedCount =
-    mode === "edit"
-      ? (folder?.authorizedCount ?? 0)
-      : permissions.filter((permission) => permission.canView).length
+  const createDossier = useCreateDossier()
+  const updateDossier = useUpdateDossier()
+  const setAccess = useSetDossierAccess()
+  const uploadDocument = useUploadDocument()
 
-  function handleSubmit(event: React.FormEvent) {
+  const authorizedCount = permissions.filter((p) => p.canView).length
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    router.push("/dossiers")
+    const responsible = users.find((user) => user.name === responsibleName)
+    const payload = {
+      title,
+      description,
+      typeId: typeId || undefined,
+      projectId: projectId || undefined,
+      siteId,
+      responsibleId: responsible?.id,
+    }
+
+    const entries = permissions
+      .filter((p) => p.canView || p.canEdit)
+      .map(({ userId, canView, canEdit }) => ({ userId, canView, canEdit }))
+
+    try {
+      const dossier =
+        mode === "edit" && folder
+          ? await updateDossier.mutateAsync({ id: folder.id, body: payload })
+          : await createDossier.mutateAsync(payload)
+
+      await setAccess.mutateAsync({ id: dossier.id, body: { entries } })
+
+      if (files.length > 0) {
+        const results = await Promise.allSettled(
+          files.map((file) =>
+            uploadDocument.mutateAsync({ file, dossierId: dossier.id })
+          )
+        )
+        const failed = results.filter((r) => r.status === "rejected").length
+        if (failed > 0) {
+          toast.add({
+            title: `${failed} document(s) n'ont pas pu être téléversés`,
+            description: "Vous pourrez réessayer depuis le dossier.",
+            type: "error",
+          })
+        }
+      }
+
+      toast.add({
+        title: mode === "edit" ? "Dossier modifié" : "Dossier créé",
+        type: "success",
+      })
+      router.push("/dossiers")
+    } catch (error) {
+      toast.add({
+        title: "Échec de l'enregistrement",
+        description: getApiErrorMessage(error, "Veuillez réessayer."),
+        type: "error",
+      })
+    }
   }
+
+  const isPending =
+    createDossier.isPending ||
+    updateDossier.isPending ||
+    setAccess.isPending ||
+    uploadDocument.isPending
 
   return (
     <form
@@ -90,17 +221,17 @@ export function FolderForm({
           Type <span className="text-[#dc2626]">*</span>
         </label>
         <Select
-          value={type}
-          onValueChange={(value) => setType(value ?? "")}
+          value={typeId}
+          onValueChange={(value) => setTypeId(value ?? "")}
           required
         >
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
             <SelectValue placeholder="Sélectionner" />
           </SelectTrigger>
           <SelectContent>
-            {folderTypes.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+            {types.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -108,21 +239,18 @@ export function FolderForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[#18181b]">
-          Projet <span className="text-[#dc2626]">*</span>
-        </label>
+        <label className="text-sm font-medium text-[#18181b]">Projet</label>
         <Select
-          value={project}
-          onValueChange={(value) => setProject(value ?? "")}
-          required
+          value={projectId}
+          onValueChange={(value) => setProjectId(value ?? "")}
         >
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
             <SelectValue placeholder="Sélectionner" />
           </SelectTrigger>
           <SelectContent>
             {projects.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -134,8 +262,8 @@ export function FolderForm({
           Site <span className="text-[#dc2626]">*</span>
         </label>
         <Select
-          value={site}
-          onValueChange={(value) => setSite(value ?? "")}
+          value={siteId}
+          onValueChange={(value) => setSiteId(value ?? "")}
           required
         >
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
@@ -143,8 +271,8 @@ export function FolderForm({
           </SelectTrigger>
           <SelectContent>
             {sites.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -156,9 +284,9 @@ export function FolderForm({
           Responsable du dossier <span className="text-[#dc2626]">*</span>
         </label>
         <UserCombobox
-          users={users}
-          value={responsible}
-          onChange={setResponsible}
+          users={users.map((user) => user.name)}
+          value={responsibleName}
+          onChange={setResponsibleName}
         />
       </div>
 
@@ -178,23 +306,29 @@ export function FolderForm({
             <ChevronRight className="size-5 text-muted-foreground" />
           )}
         </button>
-        {mode === "edit" && authorizedCount > 0 && (
+        {authorizedCount > 0 && (
           <span className="w-fit rounded bg-[#f2cfde] px-1.5 py-1 text-xs font-medium text-[#2f2f2f]">
             {authorizedCount} Autorisés
           </span>
         )}
       </div>
 
-      <FolderDocumentsField
-        files={files}
-        onRemove={(name) =>
-          setFiles((current) => current.filter((file) => file.name !== name))
-        }
-      />
+      <div className="md:col-span-2">
+        <DocumentUploadField
+          files={files}
+          onFilesAdded={(added) =>
+            setFiles((current) => [...current, ...added])
+          }
+          onRemove={(file) =>
+            setFiles((current) => current.filter((item) => item !== file))
+          }
+        />
+      </div>
 
       <div className="md:col-span-2">
         <Button
           type="submit"
+          disabled={isPending}
           className="h-11 rounded-lg bg-[#700032] px-5 text-base font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
         >
           {mode === "edit"

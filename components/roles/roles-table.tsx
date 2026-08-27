@@ -1,63 +1,57 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { roles } from "@/components/roles/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
 import { RoleRowActions } from "@/components/roles/role-row-actions"
+import { useRoles } from "@/hooks/role/useRole"
+import type { Role } from "@/hooks/role/type"
 
 export function RolesTable() {
+  const { data, isLoading } = useRoles()
+
+  const columns = useMemo<ColumnDef<Role>[]>(
+    () => [
+      {
+        accessorKey: "code",
+        header: "Référence",
+      },
+      {
+        accessorKey: "name",
+        header: "Nom",
+      },
+      {
+        id: "permissions",
+        header: "Permissions",
+        cell: ({ row }) => row.original.permissions.length,
+      },
+      {
+        accessorKey: "usersCount",
+        header: "Utilisateurs",
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Créé le",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <RoleRowActions role={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Nom
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Permissions
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Utilisateurs
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Créé le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {roles.map((role) => (
-          <TableRow key={role.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {role.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {role.name}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {role.permissions.length}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {role.usersCount}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {role.createdAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <RoleRowActions role={role} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucun rôle"
+    />
   )
 }

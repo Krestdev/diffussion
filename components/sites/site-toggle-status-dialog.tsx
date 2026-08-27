@@ -1,7 +1,11 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Site } from "@/components/sites/types"
+import { toast } from "@/components/ui/toast"
+import { useToggleSiteStatus } from "@/hooks/site/useSite"
+import type { Site } from "@/hooks/site/type"
 
 export function SiteToggleStatusDialog({
   site,
@@ -12,8 +16,24 @@ export function SiteToggleStatusDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const isActive = site.status === "active"
+  const isActive = site.status === "ACTIVE"
   const action = isActive ? "désactiver" : "activer"
+  const toggleStatus = useToggleSiteStatus()
+
+  function handleConfirm() {
+    toggleStatus.mutate(site.id, {
+      onSuccess: () => {
+        toast.add({ title: "Statut du site mis à jour", type: "success" })
+        onOpenChange(false)
+      },
+      onError: () =>
+        toast.add({
+          title: "Échec de la mise à jour",
+          description: "Veuillez réessayer.",
+          type: "error",
+        }),
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,7 +56,8 @@ export function SiteToggleStatusDialog({
                 ? "text-sm font-medium normal-case tracking-normal bg-[#ef4444] text-white hover:bg-[#ef4444]/90"
                 : "text-sm font-medium normal-case tracking-normal bg-[#16a34a] text-white hover:bg-[#16a34a]/90"
             }
-            onClick={() => onOpenChange(false)}
+            disabled={toggleStatus.isPending}
+            onClick={handleConfirm}
           >
             Oui, {action}
           </Button>

@@ -12,22 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { correspondentTypes } from "@/components/correspondants/data"
+import { toast } from "@/components/ui/toast"
+import { useCorrespondentTypes } from "@/hooks/correspondentType/useCorrespondentType"
+import { useCreateCorrespondent } from "@/hooks/correspondent/useCorrespondent"
 
 export function CorrespondentForm() {
   const router = useRouter()
 
   const [name, setName] = useState("")
-  const [type, setType] = useState("")
+  const [typeId, setTypeId] = useState("")
   const [city, setCity] = useState("")
   const [mainContact, setMainContact] = useState("")
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [email, setEmail] = useState("")
 
+  const { data: types } = useCorrespondentTypes()
+  const createCorrespondent = useCreateCorrespondent()
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    router.push("/administration/correspondants")
+    createCorrespondent.mutate(
+      { name, typeId, city, mainContact, phone, address, email },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Correspondant créé", type: "success" })
+          router.push("/administration/correspondants")
+        },
+        onError: () =>
+          toast.add({
+            title: "Échec de la création",
+            description: "Veuillez réessayer.",
+            type: "error",
+          }),
+      }
+    )
   }
 
   return (
@@ -52,14 +71,14 @@ export function CorrespondentForm() {
         <label className="text-sm font-medium text-[#18181b]">
           Type <span className="text-[#dc2626]">*</span>
         </label>
-        <Select value={type} onValueChange={(value) => setType(value ?? "")} required>
+        <Select value={typeId} onValueChange={(value) => setTypeId(value ?? "")} required>
           <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
             <SelectValue placeholder="Sélectionner" />
           </SelectTrigger>
           <SelectContent>
-            {correspondentTypes.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
+            {types?.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -132,6 +151,7 @@ export function CorrespondentForm() {
       <div className="md:col-span-2">
         <Button
           type="submit"
+          disabled={createCorrespondent.isPending}
           className="h-11 rounded-lg bg-[#700032] px-5 text-base font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
         >
           Enregistrer

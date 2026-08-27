@@ -7,7 +7,6 @@ import {
   File,
   Hash,
   TextQuote,
-  UserRound,
   UserStar,
   type LucideIcon,
 } from "lucide-react"
@@ -15,9 +14,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import { PriorityBadge } from "@/components/requetes/priority-badge"
+import { LivrableStatusBadge } from "@/components/shared/livrable-status-badge"
+import { PriorityBadge } from "@/components/shared/priority-badge"
 import { StatusBadge } from "@/components/requetes/status-badge"
-import type { Request } from "@/components/requetes/types"
+import { requestStatusBucket } from "@/components/requetes/types"
+import { toBadgePriority } from "@/lib/priority"
+import type { Instruction } from "@/hooks/instruction/type"
 
 function InfoRow({
   icon: Icon,
@@ -48,10 +50,12 @@ export function RequestViewDialog({
   open,
   onOpenChange,
 }: {
-  request: Request
+  request: Instruction
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const supervisor = request.assignees.find((a) => a.role === "SUPERVISEUR")
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -65,53 +69,60 @@ export function RequestViewDialog({
             label="Référence"
             value={
               <span className="rounded bg-[#f2cfde] px-1.5 py-0.5 text-[#9e1351]">
-                {request.code}
+                {request.number}
               </span>
             }
           />
-          <InfoRow icon={Archive} label="Dossier" value={request.folder} />
+          <InfoRow icon={Archive} label="Dossier" value={request.dossier.title} />
           <InfoRow
             icon={TextQuote}
             label="Description"
-            value={request.description}
+            value={request.description ?? "—"}
             span
           />
           <InfoRow
             icon={CircleQuestionMark}
             label="Statut"
-            value={<StatusBadge status={request.status} showIcon />}
+            value={<StatusBadge status={requestStatusBucket(request.status)} showIcon />}
           />
           <InfoRow
             icon={ChevronsUp}
             label="Priorité"
-            value={<PriorityBadge priority={request.priority} />}
+            value={<PriorityBadge priority={toBadgePriority(request.priority)} />}
           />
           <InfoRow
             icon={UserStar}
-            label="Supervisuer"
-            value={request.supervisor}
+            label="Superviseur"
+            value={supervisor?.user.name ?? "—"}
           />
-          <InfoRow icon={CalendarDays} label="Délai" value={request.dueDate} />
           <InfoRow
-            icon={UserRound}
-            label="Créé par"
-            value={request.createdBy}
+            icon={CalendarDays}
+            label="Délai"
+            value={
+              request.dueDate
+                ? new Date(request.dueDate).toLocaleDateString("fr-FR")
+                : "—"
+            }
           />
-          <InfoRow icon={Calendar} label="Créé le" value={request.createdAt} />
+          <InfoRow
+            icon={Calendar}
+            label="Créé le"
+            value={new Date(request.createdAt).toLocaleDateString("fr-FR")}
+          />
           <InfoRow
             icon={Calendar}
             label="Modifié le"
-            value={request.updatedAt}
+            value={new Date(request.updatedAt).toLocaleDateString("fr-FR")}
           />
-          {request.deliverables.map((deliverable) => (
+          {request.livrables.map((livrable, index) => (
             <InfoRow
-              key={deliverable.label}
+              key={livrable.id}
               icon={File}
-              label={deliverable.label}
+              label={`Livrable ${index + 1}`}
               value={
                 <div className="flex flex-col items-start gap-1">
-                  <span>{deliverable.title}</span>
-                  <StatusBadge status={deliverable.status} />
+                  <span>{livrable.title}</span>
+                  <LivrableStatusBadge status={livrable.status} />
                 </div>
               }
             />

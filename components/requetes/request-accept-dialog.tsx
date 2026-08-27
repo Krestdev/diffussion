@@ -1,17 +1,39 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Request } from "@/components/requetes/types"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
+import { useAcceptInstruction } from "@/hooks/instruction/useInstruction"
+import type { Instruction } from "@/hooks/instruction/type"
 
 export function RequestAcceptDialog({
   request,
   open,
   onOpenChange,
 }: {
-  request: Request
+  request: Instruction
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const acceptInstruction = useAcceptInstruction()
+
+  function handleConfirm() {
+    acceptInstruction.mutate(request.id, {
+      onSuccess: () => {
+        toast.add({ title: "Tâche acceptée", type: "success" })
+        onOpenChange(false)
+      },
+      onError: (error) =>
+        toast.add({
+          title: "Échec de l'acceptation",
+          description: getApiErrorMessage(error, "Veuillez réessayer."),
+          type: "error",
+        }),
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -25,12 +47,13 @@ export function RequestAcceptDialog({
         />
         <p className="py-3 text-sm text-[#2f2f2f]">
           Êtes-vous sûr de vouloir <span className="font-bold">accepter</span>{" "}
-          cette tâche ? Cette action est irréversible.
+          cette tâche ?
         </p>
         <DialogFooter>
           <Button
             className="bg-[#16a34a] text-sm font-medium tracking-normal text-white normal-case hover:bg-[#16a34a]/90"
-            onClick={() => onOpenChange(false)}
+            disabled={acceptInstruction.isPending}
+            onClick={handleConfirm}
           >
             Oui, accepter
           </Button>

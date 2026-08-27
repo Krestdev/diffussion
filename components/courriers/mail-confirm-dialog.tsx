@@ -14,6 +14,8 @@ export function MailConfirmDialog({
   description,
   confirmLabel,
   confirmClassName,
+  onConfirm,
+  isPending,
   open,
   onOpenChange,
 }: {
@@ -22,6 +24,8 @@ export function MailConfirmDialog({
   description: string
   confirmLabel: string
   confirmClassName: string
+  onConfirm: () => void
+  isPending?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -43,7 +47,8 @@ export function MailConfirmDialog({
               "text-sm font-medium tracking-normal normal-case",
               confirmClassName
             )}
-            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            onClick={onConfirm}
           >
             {confirmLabel}
           </Button>

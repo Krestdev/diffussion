@@ -1,23 +1,45 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { users } from "@/components/sites/data"
 import { UserCombobox } from "@/components/shared/user-combobox"
+import { toast } from "@/components/ui/toast"
+import { useAdminUsers } from "@/hooks/adminUser/useAdminUser"
+import { useCreateSite } from "@/hooks/site/useSite"
 
 export function SiteForm() {
   const router = useRouter()
 
   const [name, setName] = useState("")
   const [city, setCity] = useState("")
-  const [manager, setManager] = useState("")
+  const [managerName, setManagerName] = useState("")
+
+  const { data: users } = useAdminUsers()
+  const createSite = useCreateSite()
+
+  const userNames = useMemo(() => users?.map((user) => user.name) ?? [], [users])
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    router.push("/administration/sites")
+    const responsible = users?.find((user) => user.name === managerName)
+    createSite.mutate(
+      { name, city, responsibleId: responsible?.id },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Site créé", type: "success" })
+          router.push("/administration/sites")
+        },
+        onError: () =>
+          toast.add({
+            title: "Échec de la création",
+            description: "Veuillez réessayer.",
+            type: "error",
+          }),
+      }
+    )
   }
 
   return (
@@ -55,12 +77,17 @@ export function SiteForm() {
         <label className="text-sm font-medium text-[#18181b]">
           Responsable du site <span className="text-[#dc2626]">*</span>
         </label>
-        <UserCombobox users={users} value={manager} onChange={setManager} />
+        <UserCombobox
+          users={userNames}
+          value={managerName}
+          onChange={setManagerName}
+        />
       </div>
 
       <div className="md:col-span-2">
         <Button
           type="submit"
+          disabled={createSite.isPending}
           className="h-11 rounded-lg bg-[#700032] px-5 text-base font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
         >
           Créer le site

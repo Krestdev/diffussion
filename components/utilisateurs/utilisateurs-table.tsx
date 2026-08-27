@@ -1,78 +1,74 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { appUsers } from "@/components/utilisateurs/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
 import { UserRowActions } from "@/components/utilisateurs/user-row-actions"
+import { useAdminUsers } from "@/hooks/adminUser/useAdminUser"
+import type { AppUser } from "@/hooks/adminUser/type"
 
 export function UtilisateursTable() {
+  const { data, isLoading } = useAdminUsers()
+
+  const columns = useMemo<ColumnDef<AppUser>[]>(
+    () => [
+      {
+        id: "reference",
+        header: "Référence",
+        cell: ({ row }) => row.original.registrationNumber ?? "—",
+      },
+      {
+        accessorKey: "name",
+        header: "Nom & prénoms",
+      },
+      {
+        accessorKey: "email",
+        header: "Adresse mail",
+      },
+      {
+        id: "function",
+        header: "Fonction",
+        cell: ({ row }) => row.original.function ?? "—",
+      },
+      {
+        id: "sites",
+        header: "Site",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.sites.map((site) => (
+              <span
+                key={site.id}
+                className="inline-flex h-[22px] items-center rounded-md border border-[#e4e4e7] bg-[#f4f4f5] px-2 py-0.5 text-sm font-medium text-[#52525b]"
+              >
+                {site.name}
+              </span>
+            ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Enregistré le",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <UserRowActions user={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Nom & prénoms
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Adresse mail
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Fonction
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Site
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Enregistré le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {appUsers.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {user.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {user.fullName}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {user.email}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {user.function}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf]">
-              <div className="flex flex-wrap gap-1">
-                {user.sites.map((site) => (
-                  <span
-                    key={site}
-                    className="inline-flex h-[22px] items-center rounded-md border border-[#e4e4e7] bg-[#f4f4f5] px-2 py-0.5 text-sm font-medium text-[#52525b]"
-                  >
-                    {site}
-                  </span>
-                ))}
-              </div>
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {user.createdAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <UserRowActions user={user} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucun utilisateur"
+    />
   )
 }

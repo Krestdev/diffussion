@@ -1,17 +1,39 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { OutgoingMail } from "@/components/courriers-sortants/types"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
+import { useCancelCourrier } from "@/hooks/courrier/useCourrier"
+import type { Courrier } from "@/hooks/courrier/type"
 
 export function OutgoingMailCancelDialog({
   mail,
   open,
   onOpenChange,
 }: {
-  mail: OutgoingMail
+  mail: Courrier
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const cancelCourrier = useCancelCourrier()
+
+  function handleConfirm() {
+    cancelCourrier.mutate(mail.id, {
+      onSuccess: () => {
+        toast.add({ title: "Courrier annulé", type: "success" })
+        onOpenChange(false)
+      },
+      onError: (error) =>
+        toast.add({
+          title: "Échec de l'annulation",
+          description: getApiErrorMessage(error, "Veuillez réessayer."),
+          type: "error",
+        }),
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -30,7 +52,8 @@ export function OutgoingMailCancelDialog({
         <DialogFooter>
           <Button
             className="bg-destructive text-sm font-medium tracking-normal text-white normal-case hover:bg-destructive/90"
-            onClick={() => onOpenChange(false)}
+            disabled={cancelCourrier.isPending}
+            onClick={handleConfirm}
           >
             Oui, annuler
           </Button>

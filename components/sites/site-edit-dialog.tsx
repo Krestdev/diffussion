@@ -13,8 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import { users } from "@/components/sites/data"
-import type { Site } from "@/components/sites/types"
+import { toast } from "@/components/ui/toast"
+import { useAdminUsers } from "@/hooks/adminUser/useAdminUser"
+import { useUpdateSite } from "@/hooks/site/useSite"
+import type { Site } from "@/hooks/site/type"
 
 export function SiteEditDialog({
   site,
@@ -26,8 +28,29 @@ export function SiteEditDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [name, setName] = useState(site.name)
-  const [city, setCity] = useState(site.city)
-  const [manager, setManager] = useState(site.manager)
+  const [city, setCity] = useState(site.city ?? "")
+  const [responsibleId, setResponsibleId] = useState(site.responsibleId ?? "")
+
+  const { data: users } = useAdminUsers()
+  const updateSite = useUpdateSite()
+
+  function handleSubmit() {
+    updateSite.mutate(
+      { id: site.id, body: { name, city, responsibleId } },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Site modifié", type: "success" })
+          onOpenChange(false)
+        },
+        onError: () =>
+          toast.add({
+            title: "Échec de la modification",
+            description: "Veuillez réessayer.",
+            type: "error",
+          }),
+      }
+    )
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,17 +87,17 @@ export function SiteEditDialog({
               Responsable du site <span className="text-[#dc2626]">*</span>
             </label>
             <Select
-              value={manager}
-              onValueChange={(value) => setManager(value ?? "")}
+              value={responsibleId}
+              onValueChange={(value) => setResponsibleId(value ?? "")}
               required
             >
               <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
                 <SelectValue placeholder="Sélectionner" />
               </SelectTrigger>
               <SelectContent>
-                {users.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
+                {users?.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -84,7 +107,8 @@ export function SiteEditDialog({
         <DialogFooter>
           <Button
             className="text-sm font-medium normal-case tracking-normal bg-[#700032] text-white hover:bg-[#700032]/90"
-            onClick={() => onOpenChange(false)}
+            disabled={updateSite.isPending}
+            onClick={handleSubmit}
           >
             Soumettre
           </Button>

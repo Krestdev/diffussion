@@ -12,15 +12,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { FolderArchiveDialog } from "@/components/dossiers/folder-archive-dialog"
-import { FolderDocumentsDialog } from "@/components/dossiers/folder-documents-dialog"
-import { FolderPermissionsDialog } from "@/components/dossiers/folder-permissions-dialog"
-import { FolderViewDialog } from "@/components/dossiers/folder-view-dialog"
-import type { Folder } from "@/components/dossiers/types"
+import type { Dossier } from "@/hooks/dossier/type"
 
-type OpenDialog = "view" | "permissions" | "documents" | "archive" | null
+type OpenDialog = "close" | "reopen" | "archive" | null
 
-export function FolderRowActions({ folder }: { folder: Folder }) {
+// "Voir" now opens the full detail page (contents, access rights, circuit)
+// instead of a dialog — see app/(dashboard)/dossiers/[id]/page.tsx. That
+// page also covers what the old "Permissions"/"Voir les documents" dialogs
+// used to show, so those menu entries are gone.
+export function FolderRowActions({ folder }: { folder: Dossier }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+
+  const isTerminal = folder.status === "ARCHIVED"
+  const isClosed = folder.status === "CLOSED"
 
   return (
     <>
@@ -34,49 +38,45 @@ export function FolderRowActions({ folder }: { folder: Folder }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem render={<Link href={`/dossiers/${folder.id}`} />}>
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("permissions")}>
-            Permissions
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("documents")}>
-            Voir les documents
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            render={<Link href={`/dossiers/${folder.id}/modifier`} />}
-          >
-            Modifier
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("archive")}
-          >
-            Archiver
-          </DropdownMenuItem>
+          {!isTerminal && (
+            <DropdownMenuItem
+              render={<Link href={`/dossiers/${folder.id}/modifier`} />}
+            >
+              Modifier
+            </DropdownMenuItem>
+          )}
+          {!isClosed && !isTerminal && (
+            <DropdownMenuItem onClick={() => setOpenDialog("close")}>
+              Clôturer
+            </DropdownMenuItem>
+          )}
+          {isClosed && (
+            <DropdownMenuItem onClick={() => setOpenDialog("reopen")}>
+              Réouvrir
+            </DropdownMenuItem>
+          )}
+          {isClosed && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => setOpenDialog("archive")}
+            >
+              Archiver
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FolderViewDialog
-        folder={folder}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
-      <FolderPermissionsDialog
-        folder={folder}
-        open={openDialog === "permissions"}
-        onOpenChange={(open) => setOpenDialog(open ? "permissions" : null)}
-      />
-      <FolderDocumentsDialog
-        folder={folder}
-        open={openDialog === "documents"}
-        onOpenChange={(open) => setOpenDialog(open ? "documents" : null)}
-      />
-      <FolderArchiveDialog
-        folder={folder}
-        open={openDialog === "archive"}
-        onOpenChange={(open) => setOpenDialog(open ? "archive" : null)}
-      />
+      {(openDialog === "close" || openDialog === "reopen" || openDialog === "archive") && (
+        <FolderArchiveDialog
+          folder={folder}
+          action={openDialog}
+          open
+          onOpenChange={(open) => setOpenDialog(open ? openDialog : null)}
+        />
+      )}
     </>
   )
 }

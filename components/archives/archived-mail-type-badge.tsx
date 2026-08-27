@@ -1,18 +1,18 @@
-import type { ArchivedMailType } from "@/components/archives/types"
+import type { CourrierDirection } from "@/hooks/courrier/type"
 import { cn } from "@/lib/utils"
 
-const styles: Record<ArchivedMailType, { label: string; className: string }> = {
-  entrant: {
+const styles: Record<CourrierDirection, { label: string; className: string }> = {
+  ENTRANT: {
     label: "Entrant",
     className: "border-[#bbf7d0] bg-[#dcfce7] text-[#16a34a]",
   },
-  sortant: {
+  SORTANT: {
     label: "Sortant",
     className: "border-[#bfdbfe] bg-[#dbeafe] text-[#2563eb]",
   },
 }
 
-export function ArchivedMailTypeBadge({ type }: { type: ArchivedMailType }) {
+export function ArchivedMailTypeBadge({ type }: { type: CourrierDirection }) {
   const style = styles[type]
 
   return (

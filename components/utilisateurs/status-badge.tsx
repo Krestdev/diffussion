@@ -1,18 +1,18 @@
-import type { UserStatus } from "@/components/utilisateurs/types"
+import type { AppUserStatus } from "@/hooks/adminUser/type"
 import { cn } from "@/lib/utils"
 
-const styles: Record<UserStatus, { label: string; className: string }> = {
-  actif: {
+const styles: Record<AppUserStatus, { label: string; className: string }> = {
+  ACTIVE: {
     label: "Actif",
     className: "border-[#bbf7d0] bg-[#dcfce7] text-[#16a34a]",
   },
-  suspendu: {
+  SUSPENDED: {
     label: "Suspendu",
     className: "border-[#fecaca] bg-[#fee2e2] text-[#dc2626]",
   },
 }
 
-export function StatusBadge({ status }: { status: UserStatus }) {
+export function StatusBadge({ status }: { status: AppUserStatus }) {
   const style = styles[status]
 
   return (

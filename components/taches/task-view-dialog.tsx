@@ -6,7 +6,6 @@ import {
   CircleQuestionMark,
   Hash,
   TextQuote,
-  UserRound,
   UserStar,
   type LucideIcon,
 } from "lucide-react"
@@ -14,9 +13,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import { PriorityBadge } from "@/components/taches/priority-badge"
+import { LivrableStatusBadge } from "@/components/shared/livrable-status-badge"
+import { PriorityBadge } from "@/components/shared/priority-badge"
 import { StatusBadge } from "@/components/taches/status-badge"
-import type { Task } from "@/components/taches/types"
+import { taskStatusBucket } from "@/components/taches/types"
+import { toBadgePriority } from "@/lib/priority"
+import type { Instruction } from "@/hooks/instruction/type"
 
 function InfoRow({
   icon: Icon,
@@ -47,10 +49,12 @@ export function TaskViewDialog({
   open,
   onOpenChange,
 }: {
-  task: Task
+  task: Instruction
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const supervisor = task.assignees.find((a) => a.role === "SUPERVISEUR")
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -64,45 +68,60 @@ export function TaskViewDialog({
             label="Référence"
             value={
               <span className="rounded bg-[#f2cfde] px-1.5 py-0.5 text-[#9e1351]">
-                {task.code}
+                {task.number}
               </span>
             }
           />
-          <InfoRow icon={Archive} label="Dossier" value={task.folder} />
+          <InfoRow icon={Archive} label="Dossier" value={task.dossier.title} />
           <InfoRow
             icon={TextQuote}
             label="Description"
-            value={task.description}
+            value={task.description ?? "—"}
             span
           />
           <InfoRow
             icon={CircleQuestionMark}
             label="Statut"
-            value={<StatusBadge status={task.status} showIcon />}
+            value={<StatusBadge status={taskStatusBucket(task.status)} showIcon />}
           />
           <InfoRow
             icon={ChevronsUp}
             label="Priorité"
-            value={<PriorityBadge priority={task.priority} />}
+            value={<PriorityBadge priority={toBadgePriority(task.priority)} />}
           />
           <InfoRow
             icon={UserStar}
             label="Superviseur"
-            value={task.supervisor}
+            value={supervisor?.user.name ?? "—"}
           />
-          <InfoRow icon={CalendarDays} label="Délai" value={task.dueDate} />
-          <InfoRow icon={UserRound} label="Créé par" value={task.createdBy} />
-          <InfoRow icon={Calendar} label="Créé le" value={task.createdAt} />
-          <InfoRow icon={Calendar} label="Modifié le" value={task.updatedAt} />
-          {task.deliverables.map((deliverable) => (
+          <InfoRow
+            icon={CalendarDays}
+            label="Délai"
+            value={
+              task.dueDate
+                ? new Date(task.dueDate).toLocaleDateString("fr-FR")
+                : "—"
+            }
+          />
+          <InfoRow
+            icon={Calendar}
+            label="Créé le"
+            value={new Date(task.createdAt).toLocaleDateString("fr-FR")}
+          />
+          <InfoRow
+            icon={Calendar}
+            label="Modifié le"
+            value={new Date(task.updatedAt).toLocaleDateString("fr-FR")}
+          />
+          {task.livrables.map((livrable, index) => (
             <InfoRow
-              key={deliverable.label}
+              key={livrable.id}
               icon={Archive}
-              label={deliverable.label}
+              label={`Livrable ${index + 1}`}
               value={
                 <div className="flex flex-col items-start gap-1">
-                  <span>{deliverable.title}</span>
-                  <StatusBadge status={deliverable.status} />
+                  <span>{livrable.title}</span>
+                  <LivrableStatusBadge status={livrable.status} />
                 </div>
               }
             />

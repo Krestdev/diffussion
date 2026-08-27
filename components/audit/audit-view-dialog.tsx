@@ -10,7 +10,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { AuditLog } from "@/components/audit/types"
+import { ActivityLevelBadge } from "@/components/audit/activity-level-badge"
+import type { ActivityLog } from "@/hooks/activity/type"
 
 function InfoRow({
   icon: Icon,
@@ -47,7 +48,7 @@ export function AuditViewDialog({
   open,
   onOpenChange,
 }: {
-  log: AuditLog
+  log: ActivityLog
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -58,24 +59,46 @@ export function AuditViewDialog({
         className="max-w-[440px] gap-0 rounded-2xl p-4"
       >
         <DialogGradientHeader
-          title={`${log.action} - ${log.entityType.toLowerCase()}`}
+          title={log.action}
           subtitle="Informations relatives à l’action"
         />
         <div className="flex flex-col gap-3 py-4">
           <InfoRow
             icon={Hash}
             label="Référence"
-            value={<ReferenceBadge>{log.reference}</ReferenceBadge>}
+            value={<ReferenceBadge>{log.id.slice(0, 8)}</ReferenceBadge>}
           />
           <InfoRow icon={SquarePlay} label="Action" value={log.action} />
-          <InfoRow icon={Package} label="Entité" value={log.entityType} />
-          <InfoRow icon={UserRound} label="Effectué par" value={log.user} />
           <InfoRow
-            icon={Hash}
-            label="Référence de l’objet"
-            value={<ReferenceBadge>{log.objectReference}</ReferenceBadge>}
+            icon={Package}
+            label="Entité"
+            value={log.entityType ?? "—"}
           />
-          <InfoRow icon={Calendar} label="Effectué le" value={log.date} />
+          <InfoRow
+            icon={UserRound}
+            label="Effectué par"
+            value={log.actorLabel ?? "Système"}
+          />
+          {log.entityId && (
+            <InfoRow
+              icon={Hash}
+              label="Référence de l’objet"
+              value={<ReferenceBadge>{log.entityId.slice(0, 8)}</ReferenceBadge>}
+            />
+          )}
+          {log.message && (
+            <InfoRow icon={SquarePlay} label="Message" value={log.message} />
+          )}
+          <InfoRow
+            icon={SquarePlay}
+            label="Niveau"
+            value={<ActivityLevelBadge level={log.level} />}
+          />
+          <InfoRow
+            icon={Calendar}
+            label="Effectué le"
+            value={new Date(log.createdAt).toLocaleString("fr-FR")}
+          />
         </div>
         <DialogFooter>
           <Button

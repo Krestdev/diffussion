@@ -13,7 +13,7 @@ import {
 import { SiteEditDialog } from "@/components/sites/site-edit-dialog"
 import { SiteToggleStatusDialog } from "@/components/sites/site-toggle-status-dialog"
 import { SiteViewDialog } from "@/components/sites/site-view-dialog"
-import type { Site } from "@/components/sites/types"
+import type { Site } from "@/hooks/site/type"
 
 type OpenDialog = "view" | "edit" | "toggle-status" | null
 
@@ -42,7 +42,7 @@ export function SiteRowActions({ site }: { site: Site }) {
             variant="destructive"
             onClick={() => setOpenDialog("toggle-status")}
           >
-            {site.status === "active" ? "Désactiver" : "Activer"}
+            {site.status === "ACTIVE" ? "Désactiver" : "Activer"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

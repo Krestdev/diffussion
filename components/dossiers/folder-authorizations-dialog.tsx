@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { FolderPermission } from "@/components/dossiers/types"
+import type { FolderPermissionEntry } from "@/components/dossiers/types"
 
 export function FolderAuthorizationsDialog({
   permissions,
@@ -12,15 +12,15 @@ export function FolderAuthorizationsDialog({
   open,
   onOpenChange,
 }: {
-  permissions: FolderPermission[]
-  onPermissionsChange: (permissions: FolderPermission[]) => void
+  permissions: FolderPermissionEntry[]
+  onPermissionsChange: (permissions: FolderPermissionEntry[]) => void
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  function togglePermission(user: string, field: "canView" | "canEdit") {
+  function togglePermission(userId: string, field: "canView" | "canEdit") {
     onPermissionsChange(
       permissions.map((permission) =>
-        permission.user === user
+        permission.userId === userId
           ? { ...permission, [field]: !permission[field] }
           : permission
       )
@@ -46,15 +46,15 @@ export function FolderAuthorizationsDialog({
           </div>
           {permissions.map((permission) => (
             <div
-              key={permission.user}
+              key={permission.userId}
               className="grid grid-cols-[1fr_80px_80px] items-center py-2 text-sm font-medium text-[#2f2f2f]"
             >
-              <p>{permission.user}</p>
+              <p>{permission.userName}</p>
               <div className="flex justify-center">
                 <Checkbox
                   checked={permission.canView}
                   onCheckedChange={() =>
-                    togglePermission(permission.user, "canView")
+                    togglePermission(permission.userId, "canView")
                   }
                 />
               </div>
@@ -62,7 +62,7 @@ export function FolderAuthorizationsDialog({
                 <Checkbox
                   checked={permission.canEdit}
                   onCheckedChange={() =>
-                    togglePermission(permission.user, "canEdit")
+                    togglePermission(permission.userId, "canEdit")
                   }
                 />
               </div>

@@ -10,15 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArchivedTaskDeleteDialog } from "@/components/archives/archived-task-delete-dialog"
-import { ArchivedTaskRestoreDialog } from "@/components/archives/archived-task-restore-dialog"
-import { ArchivedTaskViewDialog } from "@/components/archives/archived-task-view-dialog"
-import type { ArchivedTask } from "@/components/archives/types"
+import { TaskViewDialog } from "@/components/taches/task-view-dialog"
+import type { Instruction } from "@/hooks/instruction/type"
 
-type OpenDialog = "view" | "restore" | "delete" | null
-
-export function ArchivedTaskRowActions({ task }: { task: ArchivedTask }) {
-  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+// Instruction has no backend-supported "un-terminate"/restore transition and
+// no hard-delete endpoint — only "Voir" is a real action here.
+export function ArchivedTaskRowActions({ task }: { task: Instruction }) {
+  const [viewOpen, setViewOpen] = useState(false)
 
   return (
     <>
@@ -32,36 +30,13 @@ export function ArchivedTaskRowActions({ task }: { task: ArchivedTask }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem onClick={() => setViewOpen(true)}>
             Voir
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("restore")}>
-            Restaurer
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("delete")}
-          >
-            Supprimer définitivement
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ArchivedTaskViewDialog
-        task={task}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
-      <ArchivedTaskRestoreDialog
-        task={task}
-        open={openDialog === "restore"}
-        onOpenChange={(open) => setOpenDialog(open ? "restore" : null)}
-      />
-      <ArchivedTaskDeleteDialog
-        task={task}
-        open={openDialog === "delete"}
-        onOpenChange={(open) => setOpenDialog(open ? "delete" : null)}
-      />
+      <TaskViewDialog task={task} open={viewOpen} onOpenChange={setViewOpen} />
     </>
   )
 }

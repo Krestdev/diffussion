@@ -7,27 +7,48 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Request } from "@/components/requetes/types"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
+import { useRefuseInstruction } from "@/hooks/instruction/useInstruction"
+import type { Instruction } from "@/hooks/instruction/type"
 
 export function RequestRejectDialog({
   request,
   open,
   onOpenChange,
 }: {
-  request: Request
+  request: Instruction
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
   const [reason, setReason] = useState("")
+  const refuseInstruction = useRefuseInstruction()
+
+  function handleOpenChange(next: boolean) {
+    if (!next) setReason("")
+    onOpenChange(next)
+  }
+
+  function handleReject() {
+    refuseInstruction.mutate(
+      { id: request.id, motif: reason },
+      {
+        onSuccess: () => {
+          toast.add({ title: "Tâche rejetée", type: "success" })
+          handleOpenChange(false)
+        },
+        onError: (error) =>
+          toast.add({
+            title: "Échec du rejet",
+            description: getApiErrorMessage(error, "Veuillez réessayer."),
+            type: "error",
+          }),
+      }
+    )
+  }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) setReason("")
-        onOpenChange(next)
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         showCloseButton={false}
         className="max-w-[440px] gap-0 rounded-2xl p-4"
@@ -54,16 +75,16 @@ export function RequestRejectDialog({
         </div>
         <DialogFooter>
           <Button
-            disabled={reason.trim().length === 0}
+            disabled={reason.trim().length < 3 || refuseInstruction.isPending}
             className="bg-[#ef4444] text-sm font-medium tracking-normal text-white normal-case hover:bg-[#ef4444]/90"
-            onClick={() => onOpenChange(false)}
+            onClick={handleReject}
           >
             Rejeter
           </Button>
           <Button
             variant="outline"
             className="text-sm font-medium tracking-normal normal-case"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
           >
             Annuler
           </Button>

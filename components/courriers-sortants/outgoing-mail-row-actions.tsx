@@ -11,14 +11,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
 import { OutgoingMailCancelDialog } from "@/components/courriers-sortants/outgoing-mail-cancel-dialog"
-import { OutgoingMailViewDialog } from "@/components/courriers-sortants/outgoing-mail-view-dialog"
-import type { OutgoingMail } from "@/components/courriers-sortants/types"
+import { GrantCourrierAccessDialog } from "@/components/shared/grant-courrier-access-dialog"
+import { useSubmitCourrierForVerification } from "@/hooks/courrier/useCourrier"
+import type { Courrier, CourrierStatus } from "@/hooks/courrier/type"
 
-type OpenDialog = "view" | "cancel" | null
+const EDITABLE_STATUSES: CourrierStatus[] = ["BROUILLON", "A_CORRIGER"]
+const CANCELLABLE_STATUSES: CourrierStatus[] = [
+  "BROUILLON",
+  "EN_VERIFICATION",
+  "A_CORRIGER",
+  "EN_VALIDATION",
+]
 
-export function OutgoingMailRowActions({ mail }: { mail: OutgoingMail }) {
-  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+// "Voir" now opens the full detail page — see
+// app/(dashboard)/courriers/sortants/[id]/page.tsx.
+export function OutgoingMailRowActions({ mail }: { mail: Courrier }) {
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [grantOpen, setGrantOpen] = useState(false)
+  const submitForVerification = useSubmitCourrierForVerification()
+
+  function handleSubmitForVerification() {
+    submitForVerification.mutate(mail.id, {
+      onSuccess: () =>
+        toast.add({ title: "Courrier soumis pour vérification", type: "success" }),
+      onError: (error) =>
+        toast.add({
+          title: "Échec de la soumission",
+          description: getApiErrorMessage(error, "Veuillez réessayer."),
+          type: "error",
+        }),
+    })
+  }
 
   return (
     <>
@@ -32,32 +58,50 @@ export function OutgoingMailRowActions({ mail }: { mail: OutgoingMail }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem
+            render={<Link href={`/courriers/sortants/${mail.id}`} />}
+          >
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem
-            render={<Link href={`/courriers/sortants/${mail.id}/modifier`} />}
-          >
-            Modifier
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("cancel")}
-          >
-            Annuler
+          {EDITABLE_STATUSES.includes(mail.status) && (
+            <DropdownMenuItem
+              render={<Link href={`/courriers/sortants/${mail.id}/modifier`} />}
+            >
+              Modifier
+            </DropdownMenuItem>
+          )}
+          {EDITABLE_STATUSES.includes(mail.status) && (
+            <DropdownMenuItem
+              disabled={submitForVerification.isPending}
+              onClick={handleSubmitForVerification}
+            >
+              Soumettre pour vérification
+            </DropdownMenuItem>
+          )}
+          {CANCELLABLE_STATUSES.includes(mail.status) && (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => setCancelOpen(true)}
+            >
+              Annuler
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => setGrantOpen(true)}>
+            Accorder l&apos;accès
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <OutgoingMailViewDialog
-        mail={mail}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
       <OutgoingMailCancelDialog
         mail={mail}
-        open={openDialog === "cancel"}
-        onOpenChange={(open) => setOpenDialog(open ? "cancel" : null)}
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+      />
+      <GrantCourrierAccessDialog
+        courrierId={mail.id}
+        subtitle={mail.subject}
+        open={grantOpen}
+        onOpenChange={setGrantOpen}
       />
     </>
   )

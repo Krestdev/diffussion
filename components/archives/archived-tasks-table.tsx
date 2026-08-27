@@ -1,64 +1,58 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { PriorityBadge } from "@/components/taches/priority-badge"
-import { archivedTasks } from "@/components/archives/data"
+"use client"
+
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
+import { PriorityBadge } from "@/components/shared/priority-badge"
+import { toBadgePriority } from "@/lib/priority"
 import { ArchivedTaskRowActions } from "@/components/archives/archived-task-row-actions"
+import { useInstructions } from "@/hooks/instruction/useInstruction"
+import type { Instruction } from "@/hooks/instruction/type"
 
 export function ArchivedTasksTable() {
+  const { data, isLoading } = useInstructions({ status: "TERMINEE", take: 100 })
+
+  const columns = useMemo<ColumnDef<Instruction>[]>(
+    () => [
+      { accessorKey: "number", header: "Référence" },
+      { accessorKey: "title", header: "Titre" },
+      {
+        id: "dossier",
+        header: "Dossier",
+        cell: ({ row }) => row.original.dossier.title,
+      },
+      {
+        id: "priority",
+        header: "Priorité",
+        cell: ({ row }) => (
+          <PriorityBadge priority={toBadgePriority(row.original.priority)} />
+        ),
+      },
+      {
+        id: "archivedAt",
+        header: "Archivé le",
+        cell: ({ row }) =>
+          row.original.closedAt
+            ? new Date(row.original.closedAt).toLocaleDateString("fr-FR")
+            : "—",
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <ArchivedTaskRowActions task={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Titre
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Dossier
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Priorité
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Archivé le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {archivedTasks.map((task) => (
-          <TableRow key={task.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {task.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {task.title}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {task.folder}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf]">
-              <PriorityBadge priority={task.priority} />
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {task.archivedAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <ArchivedTaskRowActions task={task} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={data?.data ?? []}
+      isLoading={isLoading}
+      emptyMessage="Aucune tâche archivée"
+    />
   )
 }

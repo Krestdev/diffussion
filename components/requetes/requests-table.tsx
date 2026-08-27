@@ -1,64 +1,59 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { requests } from "@/components/requetes/data"
-import { PriorityBadge } from "@/components/requetes/priority-badge"
-import { RequestRowActions } from "@/components/requetes/request-row-actions"
+"use client"
 
-export function RequestsTable() {
+import { useMemo } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+
+import { DataTable } from "@/components/shared/data-table"
+import { PriorityBadge } from "@/components/shared/priority-badge"
+import { toBadgePriority } from "@/lib/priority"
+import { RequestRowActions } from "@/components/requetes/request-row-actions"
+import type { Instruction } from "@/hooks/instruction/type"
+
+export function RequestsTable({
+  requests,
+  isLoading,
+}: {
+  requests: Instruction[]
+  isLoading?: boolean
+}) {
+  const columns = useMemo<ColumnDef<Instruction>[]>(
+    () => [
+      { accessorKey: "number", header: "Référence" },
+      { accessorKey: "title", header: "Titre" },
+      {
+        id: "dossier",
+        header: "Dossier",
+        cell: ({ row }) => row.original.dossier.title,
+      },
+      {
+        id: "priority",
+        header: "Priorité",
+        cell: ({ row }) => (
+          <PriorityBadge priority={toBadgePriority(row.original.priority)} />
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Reçu le",
+        cell: ({ row }) =>
+          new Date(row.original.createdAt).toLocaleDateString("fr-FR"),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        meta: { align: "right" },
+        cell: ({ row }) => <RequestRowActions request={row.original} />,
+      },
+    ],
+    []
+  )
+
   return (
-    <Table className="border border-[#dfdfdf]">
-      <TableHeader>
-        <TableRow className="bg-[#f4f4f5] hover:bg-[#f4f4f5]">
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Référence
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Titre
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Dossier
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Priorité
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] normal-case">
-            Reçu le
-          </TableHead>
-          <TableHead className="border border-[#dfdfdf] text-right normal-case">
-            Actions
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {requests.map((request) => (
-          <TableRow key={request.id}>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {request.code}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {request.title}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {request.folder}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf]">
-              <PriorityBadge priority={request.priority} />
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-[#2f2f2f]">
-              {request.receivedAt}
-            </TableCell>
-            <TableCell className="border border-[#dfdfdf] text-right">
-              <RequestRowActions request={request} />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      columns={columns}
+      data={requests}
+      isLoading={isLoading}
+      emptyMessage="Aucune demande"
+    />
   )
 }

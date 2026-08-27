@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { Ellipsis } from "lucide-react"
 
@@ -10,19 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ArchivedFolderDeleteDialog } from "@/components/archives/archived-folder-delete-dialog"
 import { ArchivedFolderRestoreDialog } from "@/components/archives/archived-folder-restore-dialog"
-import { ArchivedFolderViewDialog } from "@/components/archives/archived-folder-view-dialog"
-import type { ArchivedFolder } from "@/components/archives/types"
+import type { Dossier } from "@/hooks/dossier/type"
 
-type OpenDialog = "view" | "restore" | "delete" | null
-
-export function ArchivedFolderRowActions({
-  folder,
-}: {
-  folder: ArchivedFolder
-}) {
-  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+// No hard-delete endpoint exists for Dossier (by design — see RG-DOS-*):
+// only "Voir" and "Restaurer" are real actions here.
+export function ArchivedFolderRowActions({ folder }: { folder: Dossier }) {
+  const [restoreOpen, setRestoreOpen] = useState(false)
 
   return (
     <>
@@ -36,35 +31,19 @@ export function ArchivedFolderRowActions({
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
+          <DropdownMenuItem render={<Link href={`/dossiers/${folder.id}`} />}>
             Voir
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setOpenDialog("restore")}>
+          <DropdownMenuItem onClick={() => setRestoreOpen(true)}>
             Restaurer
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setOpenDialog("delete")}
-          >
-            Supprimer définitivement
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ArchivedFolderViewDialog
-        folder={folder}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
-      />
       <ArchivedFolderRestoreDialog
         folder={folder}
-        open={openDialog === "restore"}
-        onOpenChange={(open) => setOpenDialog(open ? "restore" : null)}
-      />
-      <ArchivedFolderDeleteDialog
-        folder={folder}
-        open={openDialog === "delete"}
-        onOpenChange={(open) => setOpenDialog(open ? "delete" : null)}
+        open={restoreOpen}
+        onOpenChange={setRestoreOpen}
       />
     </>
   )

@@ -10,7 +10,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Correspondent } from "@/components/correspondants/types"
+import { toast } from "@/components/ui/toast"
+import { useDeleteCorrespondent } from "@/hooks/correspondent/useCorrespondent"
+import type { Correspondent } from "@/hooks/correspondent/type"
 
 export function CorrespondentDeleteDialog({
   correspondent,
@@ -21,6 +23,23 @@ export function CorrespondentDeleteDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const deleteCorrespondent = useDeleteCorrespondent()
+
+  function handleDelete() {
+    deleteCorrespondent.mutate(correspondent.id, {
+      onSuccess: () => {
+        toast.add({ title: "Correspondant supprimé", type: "success" })
+        onOpenChange(false)
+      },
+      onError: () =>
+        toast.add({
+          title: "Échec de la suppression",
+          description: "Veuillez réessayer.",
+          type: "error",
+        }),
+    })
+  }
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="rounded-2xl">
@@ -39,7 +58,8 @@ export function CorrespondentDeleteDialog({
           </AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-sm font-medium tracking-normal text-white normal-case hover:bg-destructive/90"
-            onClick={() => onOpenChange(false)}
+            disabled={deleteCorrespondent.isPending}
+            onClick={handleDelete}
           >
             Supprimer
           </AlertDialogAction>

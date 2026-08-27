@@ -18,6 +18,8 @@ export function ApprobationConfirmDialog({
   confirmClassName,
   cancelLabel = "Fermer",
   variant = "secondary",
+  onConfirm,
+  isPending,
   open,
   onOpenChange,
 }: {
@@ -28,6 +30,8 @@ export function ApprobationConfirmDialog({
   confirmClassName: string
   cancelLabel?: string
   variant?: "primary" | "secondary" | "success" | "destructive"
+  onConfirm: () => void
+  isPending?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
@@ -49,7 +53,8 @@ export function ApprobationConfirmDialog({
               "text-sm font-medium tracking-normal normal-case",
               confirmClassName
             )}
-            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            onClick={onConfirm}
           >
             {confirmLabel}
           </Button>

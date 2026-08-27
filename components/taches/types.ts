@@ -1,28 +1,18 @@
-export type TaskPriority = "urgent" | "normal" | "moyen"
+import type { InstructionStatus } from "@/hooks/instruction/type"
 
 export type TaskStatus = "en-attente" | "a-corriger" | "termine"
 
-export type TaskDeliverable = {
-  /** Table position label, e.g. "Livrable 1". */
-  label: string
-  title: string
-  status: TaskStatus
+// The Tâches list simplifies the full Instruction state machine down to the
+// 3 buckets this UI exposes.
+export function taskStatusBucket(status: InstructionStatus): TaskStatus {
+  if (status === "A_CORRIGER") return "a-corriger"
+  if (status === "TERMINEE") return "termine"
+  return "en-attente"
 }
 
-export type Task = {
-  id: string
-  /** Table code, e.g. "T-6899". */
-  code: string
-  title: string
-  folder: string
-  description: string
-  status: TaskStatus
-  priority: TaskPriority
-  supervisor: string
-  dueDate: string
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  receivedAt: string
-  deliverables: TaskDeliverable[]
+// Top-level tab grouping: "terminées" is a strict subset of the buckets
+// above, everything else (including a-corriger) still counts as "en cours".
+export function isTaskInProgress(status: InstructionStatus): boolean {
+  return status !== "TERMINEE" && status !== "ANNULEE"
 }
+

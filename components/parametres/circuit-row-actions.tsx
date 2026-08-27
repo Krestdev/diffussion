@@ -10,13 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CircuitViewDialog } from "@/components/parametres/circuit-view-dialog"
-import { CircuitEditDialog } from "@/components/parametres/circuit-edit-dialog"
-import type { ValidationCircuit } from "@/components/parametres/types"
+import { CircuitFormDialog } from "@/components/parametres/circuit-form-dialog"
+import { CircuitStepsDialog } from "@/components/parametres/circuit-steps-dialog"
+import { CircuitDeleteDialog } from "@/components/parametres/circuit-delete-dialog"
+import type { Circuit } from "@/hooks/circuit/type"
 
-type OpenDialog = "view" | "edit" | null
+type OpenDialog = "edit" | "steps" | "delete" | null
 
-export function CircuitRowActions({ circuit }: { circuit: ValidationCircuit }) {
+export function CircuitRowActions({ circuit }: { circuit: Circuit }) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
 
   return (
@@ -31,24 +32,35 @@ export function CircuitRowActions({ circuit }: { circuit: ValidationCircuit }) {
           <span className="sr-only">Actions</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setOpenDialog("view")}>
-            Voir
+          <DropdownMenuItem onClick={() => setOpenDialog("steps")}>
+            Gérer les étapes
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenDialog("edit")}>
             Modifier
           </DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => setOpenDialog("delete")}
+          >
+            Supprimer
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CircuitViewDialog
+      <CircuitStepsDialog
         circuit={circuit}
-        open={openDialog === "view"}
-        onOpenChange={(open) => setOpenDialog(open ? "view" : null)}
+        open={openDialog === "steps"}
+        onOpenChange={(open) => setOpenDialog(open ? "steps" : null)}
       />
-      <CircuitEditDialog
+      <CircuitFormDialog
         circuit={circuit}
         open={openDialog === "edit"}
         onOpenChange={(open) => setOpenDialog(open ? "edit" : null)}
+      />
+      <CircuitDeleteDialog
+        circuit={circuit}
+        open={openDialog === "delete"}
+        onOpenChange={(open) => setOpenDialog(open ? "delete" : null)}
       />
     </>
   )

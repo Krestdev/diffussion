@@ -1,16 +1,9 @@
-import {
-  Calendar,
-  Hash,
-  ShieldCheck,
-  Users,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react"
+import { Calendar, Hash, ShieldCheck, Users, type LucideIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Role } from "@/components/roles/types"
+import type { Role } from "@/hooks/role/type"
 
 function InfoRow({
   icon: Icon,
@@ -70,17 +63,22 @@ export function RoleViewDialog({
             value={
               <div className="flex flex-col gap-0.5">
                 {role.permissions.map((permission) => (
-                  <span key={permission}>{permission}</span>
+                  <span key={permission.id}>
+                    {permission.description ?? permission.code}
+                  </span>
                 ))}
               </div>
             }
           />
-          <InfoRow icon={UserRound} label="Créé par" value={role.createdBy} />
-          <InfoRow icon={Calendar} label="Créé le" value={role.createdAt} />
+          <InfoRow
+            icon={Calendar}
+            label="Créé le"
+            value={new Date(role.createdAt).toLocaleDateString("fr-FR")}
+          />
           <InfoRow
             icon={Calendar}
             label="Modifié le"
-            value={role.updatedAt}
+            value={new Date(role.updatedAt).toLocaleDateString("fr-FR")}
           />
         </div>
         <DialogFooter>

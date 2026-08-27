@@ -6,7 +6,15 @@ import { Check, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog"
 import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header"
-import type { Task } from "@/components/taches/types"
+import { LivrableStatusBadge } from "@/components/shared/livrable-status-badge"
+import { toast } from "@/components/ui/toast"
+import { getApiErrorMessage } from "@/lib/apiError"
+import { useUploadDocument } from "@/hooks/document/useDocument"
+import {
+  useDepositDeliverable,
+  useSubmitDeliverable,
+} from "@/hooks/deliverable/useDeliverable"
+import type { Instruction } from "@/hooks/instruction/type"
 import { cn } from "@/lib/utils"
 
 function formatFileSize(bytes: number) {
@@ -16,12 +24,10 @@ function formatFileSize(bytes: number) {
 }
 
 function DeliverableUpload({
-  label,
   title,
   file,
   onChange,
 }: {
-  label: string
   title: string
   file: File | null
   onChange: (file: File | null) => void
@@ -47,7 +53,7 @@ function DeliverableUpload({
         <input
           type="file"
           className="sr-only"
-          aria-label={label}
+          aria-label={title}
           onChange={(event) => onChange(event.target.files?.[0] ?? null)}
         />
         <span className="flex size-10 items-center justify-center rounded-full border border-[#f4f4f5]">
@@ -57,7 +63,7 @@ function DeliverableUpload({
           Télécharger des fichiers
         </span>
         <span className="text-[10px] text-[#a1a1aa]">
-          Glisser-déposer ou parcourir (max. 2 Mo)
+          Glisser-déposer ou parcourir
         </span>
       </label>
       {file && (
@@ -87,20 +93,61 @@ export function TaskCompleteDialog({
   open,
   onOpenChange,
 }: {
-  task: Task
+  task: Instruction
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
   const [files, setFiles] = useState<Record<string, File | null>>({})
 
-  function handleSubmit() {
-    setFiles({})
-    onOpenChange(false)
-  }
+  const uploadDocument = useUploadDocument()
+  const depositDeliverable = useDepositDeliverable()
+  const submitDeliverable = useSubmitDeliverable()
+  const isPending =
+    uploadDocument.isPending ||
+    depositDeliverable.isPending ||
+    submitDeliverable.isPending
+
+  const openLivrables = task.livrables.filter(
+    (livrable) => livrable.status === "EN_PREPARATION" || livrable.status === "DEPOSE"
+  )
+  const doneLivrables = task.livrables.filter(
+    (livrable) => livrable.status !== "EN_PREPARATION" && livrable.status !== "DEPOSE"
+  )
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) setFiles({})
     onOpenChange(nextOpen)
+  }
+
+  async function handleSubmit() {
+    const missing = openLivrables.some((livrable) => !files[livrable.id])
+    if (missing) {
+      toast.add({
+        title: "Un fichier est requis pour chaque livrable",
+        type: "error",
+      })
+      return
+    }
+
+    try {
+      for (const livrable of openLivrables) {
+        const file = files[livrable.id]
+        if (!file) continue
+        await uploadDocument.mutateAsync({ file, livrableId: livrable.id })
+        if (livrable.status === "EN_PREPARATION") {
+          await depositDeliverable.mutateAsync(livrable.id)
+        }
+        await submitDeliverable.mutateAsync(livrable.id)
+      }
+      toast.add({ title: "Tâche complétée", type: "success" })
+      handleOpenChange(false)
+    } catch (error) {
+      toast.add({
+        title: "Échec de la complétion",
+        description: getApiErrorMessage(error, "Veuillez réessayer."),
+        type: "error",
+      })
+    }
   }
 
   return (
@@ -115,24 +162,37 @@ export function TaskCompleteDialog({
           variant="secondary"
         />
         <div className="flex flex-col gap-4 py-3">
-          {task.deliverables.map((deliverable) => (
+          {openLivrables.map((livrable) => (
             <DeliverableUpload
-              key={deliverable.label}
-              label={deliverable.label}
-              title={deliverable.title}
-              file={files[deliverable.label] ?? null}
+              key={livrable.id}
+              title={livrable.title}
+              file={files[livrable.id] ?? null}
               onChange={(file) =>
-                setFiles((current) => ({
-                  ...current,
-                  [deliverable.label]: file,
-                }))
+                setFiles((current) => ({ ...current, [livrable.id]: file }))
               }
             />
           ))}
+          {doneLivrables.map((livrable) => (
+            <div
+              key={livrable.id}
+              className="flex items-center justify-between rounded border border-[#f4f4f5] p-2"
+            >
+              <p className="text-sm font-medium text-[#18181b]">
+                {livrable.title}
+              </p>
+              <LivrableStatusBadge status={livrable.status} />
+            </div>
+          ))}
+          {task.livrables.length === 0 && (
+            <p className="text-sm text-[#71717a]">
+              Aucun livrable associé à cette tâche.
+            </p>
+          )}
         </div>
         <DialogFooter>
           <Button
             className="bg-[#700032] text-sm font-medium tracking-normal text-white normal-case hover:bg-[#700032]/90"
+            disabled={isPending || openLivrables.length === 0}
             onClick={handleSubmit}
           >
             Soumettre
