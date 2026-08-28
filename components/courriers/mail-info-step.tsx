@@ -135,7 +135,6 @@ export function MailInfoStep({
           existing courrier's owner goes through CircuitOwnerRow instead. */}
       {mode === "create" && (
         <CircuitOwnerField
-          dossierId={draft.dossierId}
           value={draft.ownerId}
           onChange={(ownerId) => set("ownerId", ownerId)}
         />

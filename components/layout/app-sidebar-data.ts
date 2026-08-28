@@ -55,10 +55,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "Instructions",
     labelClassName: "text-[#bb4d00]",
-    items: [
-      { title: "Requêtes", href: "/instructions/requetes", badge: 4 },
-      { title: "Tâches", href: "/instructions/taches", badge: 11 },
-    ],
+    items: [{ title: "Tâches", href: "/instructions/taches", badge: 11 }],
   },
   {
     label: "Administration",

@@ -196,7 +196,6 @@ export function OutgoingMailForm({
           existing courrier's owner goes through CircuitOwnerRow instead. */}
       {mode === "create" && (
         <CircuitOwnerField
-          dossierId={dossierId}
           value={ownerId}
           onChange={setOwnerId}
         />

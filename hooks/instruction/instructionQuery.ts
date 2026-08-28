@@ -23,8 +23,9 @@ class InstructionQuery extends BaseQuery<Instruction, CreateInstructionPayload> 
     return response.data
   }
 
-  accept = (id: string) => this.patchAction(id, "accept")
-  refuse = (id: string, motif: string) => this.patchAction(id, "refuse", { motif })
+  // Rejecting a task reassigns it in the same step — see RefuseInstructionDto.
+  refuse = (id: string, body: { motif: string; newAssigneeId: string }) =>
+    this.patchAction(id, "refuse", body)
   close = (id: string) => this.patchAction(id, "close")
   cancel = (id: string) => this.patchAction(id, "cancel")
 }

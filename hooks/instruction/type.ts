@@ -20,6 +20,8 @@ export type InstructionAssignee = {
   user: { id: string; name: string }
 }
 
+export type InstructionRef = { id: string; number: string; title: string }
+
 export type Instruction = {
   id: string
   number: string
@@ -39,6 +41,10 @@ export type Instruction = {
   livrables: Deliverable[]
   dossier: { id: string; number: string; title: string }
   courrier: { id: string; number: string; subject: string } | null
+  // Sub-tasks: the parent task(s) this one depends on, and the task(s)
+  // that depend on it in turn — a plain reference, no blocking is enforced.
+  dependsOn: { dependsOn: InstructionRef }[]
+  dependents: { instruction: InstructionRef }[]
 }
 
 export type CreateInstructionPayload = {
@@ -50,6 +56,7 @@ export type CreateInstructionPayload = {
   dueDate?: string
   executantIds?: string[]
   superviseurId?: string
+  dependsOnId?: string
 }
 
 export type AssignInstructionPayload = {

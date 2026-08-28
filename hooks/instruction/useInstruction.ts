@@ -45,19 +45,21 @@ export function useAssignInstruction() {
   })
 }
 
-export function useAcceptInstruction() {
-  const invalidate = useInvalidateInstructions()
-  return useMutation({
-    mutationFn: (id: string) => instructionQuery.accept(id),
-    onSuccess: invalidate,
-  })
-}
-
+// Rejecting a task reassigns it to a different executant in the same step —
+// there's no separate acceptance gate to fall back to (see
+// RefuseInstructionDto on the backend).
 export function useRefuseInstruction() {
   const invalidate = useInvalidateInstructions()
   return useMutation({
-    mutationFn: ({ id, motif }: { id: string; motif: string }) =>
-      instructionQuery.refuse(id, motif),
+    mutationFn: ({
+      id,
+      motif,
+      newAssigneeId,
+    }: {
+      id: string
+      motif: string
+      newAssigneeId: string
+    }) => instructionQuery.refuse(id, { motif, newAssigneeId }),
     onSuccess: invalidate,
   })
 }

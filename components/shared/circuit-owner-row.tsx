@@ -45,7 +45,7 @@ export function CircuitOwnerRow({
   return (
     <div className="flex items-center justify-between gap-2 border-t border-[#e4e4e7] pt-2 text-sm">
       <span className="text-[#52525b]">
-        Propriétaire du circuit :{" "}
+        Propriétaire :{" "}
         <span className="font-medium text-[#2f2f2f]">
           {owner?.name ?? "Non défini"}
         </span>
@@ -65,8 +65,8 @@ export function CircuitOwnerRow({
           className="max-w-[440px] gap-0 rounded-2xl p-4"
         >
           <DialogGradientHeader
-            title="Propriétaire du circuit"
-            subtitle="Peut décider n'importe quelle étape, quel que soit le rôle requis"
+            title="Propriétaire"
+            subtitle="Peut décider n'importe quelle étape du circuit, quel que soit le rôle requis"
             variant="secondary"
           />
           <div className="flex flex-col gap-1.5 py-3">

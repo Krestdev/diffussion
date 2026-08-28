@@ -10,6 +10,7 @@ import {
   Ellipsis,
   FolderOpen,
   Hash,
+  ListTodo,
   Map,
   SquareUserRound,
   Star,
@@ -25,11 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AccessRightsPanel } from "@/components/shared/access-rights-panel"
+import { AddTaskDialog } from "@/components/shared/add-task-dialog"
 import { DossierCircuitsSummaryPanel } from "@/components/shared/dossier-circuits-summary-panel"
 import { DossierContentsTable } from "@/components/dossiers/dossier-contents-table"
 import { FolderStatusBadge } from "@/components/dossiers/folder-status-badge"
 import { GrantDossierAccessDialog } from "@/components/shared/grant-dossier-access-dialog"
 import { PageHeader } from "@/components/shared/page-header"
+import { TasksTable } from "@/components/taches/tasks-table"
 import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
 import {
@@ -37,6 +40,7 @@ import {
   useDossierAccess,
   useSetDossierAccess,
 } from "@/hooks/dossier/useDossier"
+import { useInstructions } from "@/hooks/instruction/useInstruction"
 
 function InfoRow({
   icon: Icon,
@@ -68,6 +72,11 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { data: access, isLoading: accessLoading } = useDossierAccess(id)
   const setAccess = useSetDossierAccess()
   const [grantOpen, setGrantOpen] = useState(false)
+  const [addTaskOpen, setAddTaskOpen] = useState(false)
+  const { data: tasks, isLoading: tasksLoading } = useInstructions({
+    dossierId: id,
+    take: 100,
+  })
 
   if (isError) {
     notFound()
@@ -101,6 +110,9 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 <span className="sr-only">Actions</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAddTaskOpen(true)}>
+                  Ajouter une tâche
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setGrantOpen(true)}>
                   Accorder l&apos;accès
                 </DropdownMenuItem>
@@ -158,6 +170,14 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         <DossierContentsTable dossierId={dossier.id} />
       </div>
 
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <ListTodo className="size-5 text-[#52525b]" />
+          <p className="text-base font-semibold text-[#18181b]">Tâches</p>
+        </div>
+        <TasksTable tasks={tasks?.data ?? []} isLoading={tasksLoading} />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <AccessRightsPanel
           entries={access}
@@ -187,6 +207,12 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
         subtitle={dossier.title}
         open={grantOpen}
         onOpenChange={setGrantOpen}
+      />
+      <AddTaskDialog
+        dossierId={dossier.id}
+        contextLabel={dossier.title}
+        open={addTaskOpen}
+        onOpenChange={setAddTaskOpen}
       />
     </>
   )

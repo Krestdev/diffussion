@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronsUp,
   CircleQuestionMark,
+  GitBranch,
   Hash,
   TextQuote,
   UserStar,
@@ -113,6 +114,26 @@ export function TaskViewDialog({
             label="Modifié le"
             value={new Date(task.updatedAt).toLocaleDateString("fr-FR")}
           />
+          {task.dependsOn.length > 0 && (
+            <InfoRow
+              icon={GitBranch}
+              label="Dépend de"
+              value={task.dependsOn
+                .map((dependency) => dependency.dependsOn.title)
+                .join(", ")}
+              span
+            />
+          )}
+          {task.dependents.length > 0 && (
+            <InfoRow
+              icon={GitBranch}
+              label="Tâches dépendantes"
+              value={task.dependents
+                .map((dependent) => dependent.instruction.title)
+                .join(", ")}
+              span
+            />
+          )}
           {task.livrables.map((livrable, index) => (
             <InfoRow
               key={livrable.id}

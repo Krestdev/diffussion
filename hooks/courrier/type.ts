@@ -83,6 +83,9 @@ export type FindCourriersParams = {
   direction?: CourrierDirection
   status?: CourrierStatus
   correspondentId?: string
+  // Circuit owner (10.6) — used by the "Affectations" queue (courriers
+  // assigned to me).
+  ownerId?: string
   skip?: number
   take?: number
 }

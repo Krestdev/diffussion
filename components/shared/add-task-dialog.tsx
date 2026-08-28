@@ -20,7 +20,10 @@ import { DialogGradientHeader } from "@/components/shared/dialog-gradient-header
 import { UserCombobox } from "@/components/shared/user-combobox"
 import { useAdminUsers } from "@/hooks/adminUser/useAdminUser"
 import { useCreateDeliverable } from "@/hooks/deliverable/useDeliverable"
-import { useCreateInstruction } from "@/hooks/instruction/useInstruction"
+import {
+  useCreateInstruction,
+  useInstructions,
+} from "@/hooks/instruction/useInstruction"
 import type { InstructionPriority } from "@/hooks/instruction/type"
 
 type DeliverableDraft = { title: string }
@@ -31,9 +34,6 @@ const priorities: { value: InstructionPriority; label: string }[] = [
   { value: "LOW", label: "Faible" },
 ]
 
-// Sub-tasks (parentTask) aren't wired: InstructionDependency has no API
-// endpoint yet — the field stays disabled/empty until that's built.
-//
 // Generic enough to raise a task from any context that has a dossier — a
 // courrier (pass courrierId too) or, when raised straight from a document
 // (which has no task relation of its own in the schema), the document's
@@ -53,12 +53,16 @@ export function AddTaskDialog({
 }) {
   const { data: users } = useAdminUsers()
   const userNames = users?.map((user) => user.name) ?? []
+  // Candidate parent tasks: other tasks already in this dossier — a task
+  // can't depend on itself, and it doesn't exist yet at this point anyway.
+  const { data: dossierTasks } = useInstructions({ dossierId, take: 100 })
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [assignee, setAssignee] = useState("")
   const [supervisor, setSupervisor] = useState("")
   const [priority, setPriority] = useState<InstructionPriority | "">("")
   const [dueDate, setDueDate] = useState("")
+  const [parentTaskId, setParentTaskId] = useState("")
   const [deliverables, setDeliverables] = useState<DeliverableDraft[]>([
     { title: "" },
   ])
@@ -74,6 +78,7 @@ export function AddTaskDialog({
     setSupervisor("")
     setPriority("")
     setDueDate("")
+    setParentTaskId("")
     setDeliverables([{ title: "" }])
   }
 
@@ -91,6 +96,7 @@ export function AddTaskDialog({
         dueDate: dueDate || undefined,
         executantIds: executantId ? [executantId] : undefined,
         superviseurId,
+        dependsOnId: parentTaskId || undefined,
       })
 
       const titles = deliverables
@@ -190,13 +196,20 @@ export function AddTaskDialog({
             <label className="text-sm font-medium text-[#18181b]">
               Tâche parent (facultatif)
             </label>
-            <Select disabled>
+            <Select
+              value={parentTaskId}
+              onValueChange={(v) => setParentTaskId(v ?? "")}
+            >
               <SelectTrigger className="h-9 w-full rounded border border-[#e4e4e7] px-4">
-                <SelectValue placeholder="Bientôt disponible" />
+                <SelectValue placeholder="Sélectionner" />
               </SelectTrigger>
-              {/* Sub-tasks aren't queryable yet — wired once Instructions'
-                  self-referential dependencies get an endpoint. */}
-              <SelectContent />
+              <SelectContent>
+                {dossierTasks?.data.map((task) => (
+                  <SelectItem key={task.id} value={task.id}>
+                    {task.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
 

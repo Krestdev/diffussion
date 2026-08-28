@@ -11,11 +11,33 @@ export function useProjects() {
   })
 }
 
-export function useCreateProject() {
+function useInvalidateProjects() {
   const queryClient = useQueryClient()
+  return () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.project() })
+}
+
+export function useCreateProject() {
+  const invalidate = useInvalidateProjects()
   return useMutation({
     mutationFn: (body: ProjectPayload) => projectQuery.post(body),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.project() }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateProject() {
+  const invalidate = useInvalidateProjects()
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: Partial<ProjectPayload> }) =>
+      projectQuery.patch(id, body),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteProject() {
+  const invalidate = useInvalidateProjects()
+  return useMutation({
+    mutationFn: (id: string) => projectQuery.delete(id),
+    onSuccess: invalidate,
   })
 }
