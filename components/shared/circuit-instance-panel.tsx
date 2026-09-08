@@ -15,8 +15,13 @@ import {
   useDecideCircuitInstance,
   useStartCircuitInstance,
 } from "@/hooks/circuitInstance/useCircuitInstance"
-import { useCourrier, useSetCourrierOwner } from "@/hooks/courrier/useCourrier"
+import {
+  useCourrier,
+  useSetCourrierOwner,
+  useSubmitCourrierForVerification,
+} from "@/hooks/courrier/useCourrier"
 import { useDocument, useSetDocumentOwner } from "@/hooks/document/useDocument"
+import { canSubmitCourrierForCircuit } from "@/lib/courrierCircuit"
 
 type OpenDialog = "approve" | "reject" | null
 type Target = { courrierId: string; documentId?: never } | { documentId: string; courrierId?: never }
@@ -27,17 +32,18 @@ type Target = { courrierId: string; documentId?: never } | { documentId: string;
 // never to a bare dossier: see the Dossier detail page's read-only
 // DossierCircuitsSummaryPanel for that view instead.
 //
-// A courrier's circuit is started via its own page's "Soumettre pour
-// vérification" action, not from here — this panel just shows/decides
-// progress for it. A document has no such status-driven trigger, so this
-// panel offers a manual "Démarrer un circuit" button when passed a
-// documentId with no instance yet.
+// A courrier's circuit goes through submitForVerification() (status
+// eligibility gate + auto-resolved circuit), surfaced here as "Soumettre
+// pour vérification" so it's not only reachable from the page header's
+// Actions menu. A document has no status-driven gate at all, so it gets a
+// plain "Démarrer un circuit" button instead.
 export function CircuitInstancePanel(props: Target) {
   const { courrierId, documentId } = props
   const { data: instances, isLoading } = useCircuitInstances(
     courrierId ? { courrierId } : { documentId }
   )
   const startCircuit = useStartCircuitInstance()
+  const submitForVerification = useSubmitCourrierForVerification()
   const decide = useDecideCircuitInstance()
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
 
@@ -91,6 +97,20 @@ export function CircuitInstancePanel(props: Target) {
     )
   }
 
+  function handleSubmitForVerification() {
+    if (!courrierId) return
+    submitForVerification.mutate(courrierId, {
+      onSuccess: () =>
+        toast.add({ title: "Circuit démarré", type: "success" }),
+      onError: (error) =>
+        toast.add({
+          title: "Impossible de démarrer le circuit",
+          description: getApiErrorMessage(error, "Veuillez réessayer."),
+          type: "error",
+        }),
+    })
+  }
+
   function handleDecide(approved: boolean) {
     if (!instance) return
     decide.mutate(
@@ -140,6 +160,16 @@ export function CircuitInstancePanel(props: Target) {
               onClick={handleStart}
             >
               Démarrer un circuit
+            </Button>
+          )}
+          {courrier && canSubmitCourrierForCircuit(courrier) && (
+            <Button
+              variant="outline"
+              className="w-fit text-sm font-medium tracking-normal normal-case"
+              disabled={submitForVerification.isPending}
+              onClick={handleSubmitForVerification}
+            >
+              Soumettre pour vérification
             </Button>
           )}
         </>

@@ -8,6 +8,8 @@ export type MailDraft = {
   reference: string
   // Circuit owner (10.6), settable at creation only — see CourrierPayload.
   ownerId: string
+  // Self-reference: this courrier written in response to another one.
+  respondsToId: string
 }
 
 export function emptyMailDraft(): MailDraft {
@@ -18,5 +20,6 @@ export function emptyMailDraft(): MailDraft {
     natureId: "",
     reference: "",
     ownerId: "",
+    respondsToId: "",
   }
 }

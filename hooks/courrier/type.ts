@@ -60,6 +60,15 @@ export type Courrier = {
   correspondent: Correspondent | null
   nature: CourrierNature | null
   canal: Canal | null
+  // Self-reference: this courrier was written in response to another one,
+  // either direction. Optional, no cycle detection beyond self-reference.
+  respondsToId: string | null
+  respondsTo: {
+    id: string
+    number: string
+    subject: string
+    direction: CourrierDirection
+  } | null
 }
 
 export type CourrierPayload = {
@@ -76,6 +85,7 @@ export type CourrierPayload = {
   // Circuit owner (10.6), settable at creation only — see
   // useSetCourrierOwner for reassigning it afterwards.
   ownerId?: string
+  respondsToId?: string
 }
 
 export type FindCourriersParams = {

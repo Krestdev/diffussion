@@ -30,6 +30,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { OutgoingMailCancelDialog } from "@/components/courriers-sortants/outgoing-mail-cancel-dialog"
 import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
+import { canSubmitCourrierForCircuit } from "@/lib/courrierCircuit"
 import {
   useCourrier,
   useCourrierAccess,
@@ -123,7 +124,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 <DropdownMenuItem onClick={() => setAddTaskOpen(true)}>
                   Ajouter une tâche
                 </DropdownMenuItem>
-                {EDITABLE_STATUSES.includes(mail.status) && (
+                {canSubmitCourrierForCircuit(mail) && (
                   <DropdownMenuItem
                     disabled={submitForVerification.isPending}
                     onClick={handleSubmitForVerification}

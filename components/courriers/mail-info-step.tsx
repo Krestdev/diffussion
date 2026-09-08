@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { CircuitOwnerField } from "@/components/shared/circuit-owner-field"
+import { RespondsToField } from "@/components/shared/responds-to-field"
 import { useCorrespondents } from "@/hooks/correspondent/useCorrespondent"
 import { useCourrierNatures } from "@/hooks/courrierNature/useCourrierNature"
 import { useDossiers } from "@/hooks/dossier/useDossier"
@@ -130,6 +131,12 @@ export function MailInfoStep({
           className="h-9 rounded border border-[#e4e4e7] px-4 text-sm text-[#2f2f2f] outline-none placeholder:text-[#b0b0b0]"
         />
       </div>
+
+      <RespondsToField
+        dossierId={draft.dossierId}
+        value={draft.respondsToId}
+        onChange={(respondsToId) => set("respondsToId", respondsToId)}
+      />
 
       {/* Owner is create-only (see CourrierPayload) — reassigning an
           existing courrier's owner goes through CircuitOwnerRow instead. */}

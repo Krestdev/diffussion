@@ -16,6 +16,7 @@ import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
 import { CircuitOwnerField } from "@/components/shared/circuit-owner-field"
 import { DocumentUploadField } from "@/components/shared/document-upload-field"
+import { RespondsToField } from "@/components/shared/responds-to-field"
 import { useCorrespondents } from "@/hooks/correspondent/useCorrespondent"
 import { useCourrierNatures } from "@/hooks/courrierNature/useCourrierNature"
 import { useDossiers } from "@/hooks/dossier/useDossier"
@@ -40,6 +41,7 @@ export function OutgoingMailForm({
   const [natureId, setNatureId] = useState(mail?.natureId ?? "")
   const [reference, setReference] = useState(mail?.reference ?? "")
   const [ownerId, setOwnerId] = useState("")
+  const [respondsToId, setRespondsToId] = useState(mail?.respondsToId ?? "")
   const [files, setFiles] = useState<File[]>([])
 
   const { data: dossiers } = useDossiers()
@@ -62,6 +64,7 @@ export function OutgoingMailForm({
       // Create-only (see CourrierPayload) — omitted entirely on edit so it's
       // never sent to the update endpoint, which doesn't accept it anyway.
       ownerId: mode === "create" ? ownerId || undefined : undefined,
+      respondsToId: respondsToId || undefined,
     }
 
     try {
@@ -191,6 +194,12 @@ export function OutgoingMailForm({
           className="h-9 rounded border border-[#e4e4e7] px-4 text-sm text-[#2f2f2f] outline-none placeholder:text-[#b0b0b0]"
         />
       </div>
+
+      <RespondsToField
+        dossierId={dossierId}
+        value={respondsToId}
+        onChange={setRespondsToId}
+      />
 
       {/* Owner is create-only (see CourrierPayload) — reassigning an
           existing courrier's owner goes through CircuitOwnerRow instead. */}

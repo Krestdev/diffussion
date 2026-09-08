@@ -32,6 +32,7 @@ export function MailWizard({
           natureId: mail.natureId ?? "",
           reference: mail.reference ?? "",
           ownerId: "",
+          respondsToId: mail.respondsToId ?? "",
         }
       : emptyMailDraft()
   )
@@ -52,6 +53,7 @@ export function MailWizard({
       // Create-only (see CourrierPayload) — omitted entirely on edit so it's
       // never sent to the update endpoint, which doesn't accept it anyway.
       ownerId: mode === "create" ? draft.ownerId || undefined : undefined,
+      respondsToId: draft.respondsToId || undefined,
     }
 
     try {

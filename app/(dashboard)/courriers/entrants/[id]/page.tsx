@@ -34,6 +34,7 @@ import { MailArchiveDialog } from "@/components/courriers/mail-archive-dialog"
 import { MailConfirmDialog } from "@/components/courriers/mail-confirm-dialog"
 import { toast } from "@/components/ui/toast"
 import { getApiErrorMessage } from "@/lib/apiError"
+import { canSubmitCourrierForCircuit } from "@/lib/courrierCircuit"
 import {
   useCancelCourrier,
   useCloseCourrier,
@@ -75,15 +76,6 @@ const ENTRANT_OPEN_STATUSES: CourrierStatus[] = [
   "EN_TRAITEMENT",
 ]
 
-// Mirrors MailService's CIRCUIT_ELIGIBLE_STATUSES for the ENTRANT
-// direction — submitForVerification()/"Soumettre pour circuit" only makes
-// sense once the courrier has actually been handed off for treatment.
-const CIRCUIT_ELIGIBLE_STATUSES: CourrierStatus[] = [
-  "TRANSMIS",
-  "EN_TRAITEMENT",
-  "A_CORRIGER",
-]
-
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { data: mail, isLoading, isError } = useCourrier(id)
@@ -107,7 +99,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
 
   const isOpen = ENTRANT_OPEN_STATUSES.includes(mail.status)
   const isCompleted = mail.status === "CLOTURE"
-  const canSubmitForCircuit = CIRCUIT_ELIGIBLE_STATUSES.includes(mail.status)
+  const canSubmitForCircuit = canSubmitCourrierForCircuit(mail)
 
   function handleSubmitForCircuit() {
     submitForCircuit.mutate(mail!.id, {

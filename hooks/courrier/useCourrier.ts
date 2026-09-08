@@ -59,9 +59,16 @@ export function useTransmitCourrier() {
 
 export function useSubmitCourrierForVerification() {
   const invalidate = useInvalidateCourriers()
+  const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: string) => courrierQuery.submitForVerification(id),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      // This creates a CircuitInstance server-side — without this,
+      // CircuitInstancePanel keeps showing its "no active circuit" empty
+      // state until something else happens to refetch it.
+      queryClient.invalidateQueries({ queryKey: queryKeys.circuitInstance() })
+    },
   })
 }
 
